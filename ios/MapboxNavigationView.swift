@@ -95,6 +95,30 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
           let navigationOptions = NavigationOptions(navigationService: navigationService)
           let vc = NavigationViewController(for: response, routeIndex: 0, routeOptions: options, navigationOptions: navigationOptions)
 
+          // Customizing the UI components
+          if let instructionsBannerView = vc.navigationView.instructionsBannerView {
+            instructionsBannerView.backgroundColor = .blue
+            instructionsBannerView.primaryLabel.textColor = .white
+          }
+
+          if let bottomBannerView = vc.navigationView.bottomBannerView {
+            bottomBannerView.backgroundColor = .darkGray
+            bottomBannerView.timeRemainingLabel.textColor = .white
+          }
+
+          if let floatingStackView = vc.navigationView.floatingButtons {
+            floatingStackView.backgroundColor = .lightGray
+          }
+
+          if let speedLimitView = vc.navigationView.speedLimitView {
+            speedLimitView.signBackColor = .red
+            speedLimitView.textColor = .white
+          }
+
+          if let navigationMapView = vc.navigationView.mapView {
+            navigationMapView.tintColor = .green
+          }
+
           vc.showsEndOfRouteFeedback = strongSelf.showsEndOfRouteFeedback
           StatusView.appearance().isHidden = strongSelf.hideStatusView
 
