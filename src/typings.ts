@@ -25,6 +25,34 @@ type OnErrorEvent = {
   };
 };
 
+type ComponentStyle = {
+  topBannerBackgroundColor?: string;
+  bottomBannerBackgroundColor?: string;
+  instructionBannerBackgroundColor?: string;
+  stepInstructionsBackgroundColor?: string;
+  maneuver: {
+    primaryColor?: string;
+    secondaryColor?: string;
+    primaryColorHighlighted?: string;
+    secondaryColorHighlighted?: string;
+  },
+  primary: {
+    normalTextColor?: string;
+  },
+  secondary: {
+    normalTextColor?: string;
+  },
+  distance: {
+    unitTextColor?: string;
+    valueTextColor?: string;
+  },
+  floatingButtons: {
+    tintColor?: string;
+    backgroundColor?: string;
+    borderColor?: string;
+  },
+};
+
 export interface IMapboxNavigationProps {
   origin: Coordinate;
   destination: Coordinate;
@@ -37,4 +65,5 @@ export interface IMapboxNavigationProps {
   showsEndOfRouteFeedback?: boolean;
   hideStatusView?: boolean;
   mute?: boolean;
+  viewStyles?: ComponentStyle;
 }

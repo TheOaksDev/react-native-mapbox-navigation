@@ -16,6 +16,34 @@ extension UIView {
   }
 }
 
+extension UIColor {
+  public convenience init?(hex: String) {
+    let r, g, b, a: CGFloat
+
+    if hex.hasPrefix("#") {
+      let start = hex.index(hex.startIndex, offsetBy: 1)
+      let hexColor = String(hex[start...])
+
+      if hexColor.count == 8 {
+        let scanner = Scanner(string: hexColor)
+        var hexNumber: UInt64 = 0
+
+        if scanner.scanHexInt64(&hexNumber) {
+          r = CGFloat((hexNumber & 0xff000000) >> 24) / 255
+          g = CGFloat((hexNumber & 0x00ff0000) >> 16) / 255
+          b = CGFloat((hexNumber & 0x0000ff00) >> 8) / 255
+          a = CGFloat(hexNumber & 0x000000ff) / 255
+
+          self.init(red: r, green: g, blue: b, alpha: a)
+          return
+        }
+      }
+    }
+
+    return nil
+  }
+}
+
 class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   weak var navViewController: NavigationViewController?
   var embedded: Bool
@@ -28,11 +56,14 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   @objc var destination: NSArray = [] {
     didSet { setNeedsLayout() }
   }
+
+  @objc var viewStyles: NSDictionary = [:]
   
   @objc var shouldSimulateRoute: Bool = false
   @objc var showsEndOfRouteFeedback: Bool = false
   @objc var hideStatusView: Bool = false
   @objc var mute: Bool = false
+  @objc var showsReportFeedback: Bool = false
   
   @objc var onLocationChange: RCTDirectEventBlock?
   @objc var onRouteProgressChange: RCTDirectEventBlock?
@@ -55,6 +86,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
     
     if (navViewController == nil && !embedding && !embedded) {
       embed()
+      applyStyles()
     } else {
       navViewController?.view.frame = bounds
     }
@@ -94,7 +126,8 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
           
           let navigationOptions = NavigationOptions(navigationService: navigationService)
           let vc = NavigationViewController(for: response, routeIndex: 0, routeOptions: options, navigationOptions: navigationOptions)
-
+          
+          vc.showsReportFeedback = strongSelf.showsReportFeedback
           vc.showsEndOfRouteFeedback = strongSelf.showsEndOfRouteFeedback
           StatusView.appearance().isHidden = strongSelf.hideStatusView
 
@@ -132,5 +165,119 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   func navigationViewController(_ navigationViewController: NavigationViewController, didArriveAt waypoint: Waypoint) -> Bool {
     onArrive?(["message": ""]);
     return true;
+  }
+    
+  private func applyStyles() {
+    print("Applying styles...")
+
+    if let styles = viewStyles as? [String: Any] {
+      print("Styles dictionary: \(styles)")
+
+      let test = styles["topBannerBackgroundColor"]
+      print("Top Banner Test: \(styles["topBannerBackgroundColor"])")
+
+      if let topBannerBackgroundColorString = styles["topBannerBackgroundColor"] as? String,
+        let topBannerBackgroundColor = UIColor(hex: topBannerBackgroundColorString) {
+        print("Setting topBannerBackgroundColor to \(topBannerBackgroundColor)")
+        TopBannerView.appearance(for: self.traitCollection).backgroundColor = topBannerBackgroundColor
+      }
+
+      if let bottomBannerBackgroundColorString = styles["bottomBannerBackgroundColor"] as? String,
+        let bottomBannerBackgroundColor = UIColor(hex: bottomBannerBackgroundColorString) {
+        print("Setting bottomBannerBackgroundColor to \(bottomBannerBackgroundColor)")
+        BottomBannerView.appearance(for: self.traitCollection).backgroundColor = bottomBannerBackgroundColor
+      }
+
+      if let instructionBannerBackgroundColorString = styles["instructionBannerBackgroundColor"] as? String,
+        let instructionBannerBackgroundColor = UIColor(hex: instructionBannerBackgroundColorString) {
+        print("Setting instructionBannerBackgroundColor to \(instructionBannerBackgroundColor)")
+        InstructionsBannerView.appearance(for: self.traitCollection).backgroundColor = instructionBannerBackgroundColor
+      }
+
+      if let stepInstructionsBackgroundColorString = styles["stepInstructionsBackgroundColor"] as? String,
+        let stepInstructionsBackgroundColor = UIColor(hex: stepInstructionsBackgroundColorString) {
+        print("Setting stepInstructionsBackgroundColor to \(stepInstructionsBackgroundColor)")
+        StepInstructionsView.appearance(for: self.traitCollection).backgroundColor = stepInstructionsBackgroundColor
+      }
+
+      if let maneuver = styles["maneuver"] as? [String: String] {
+        if let primaryColorString = maneuver["primaryColor"],
+          let primaryColor = UIColor(hex: primaryColorString) {
+          print("Setting maneuver primaryColor to \(primaryColor)")
+           ManeuverView.appearance(for: self.traitCollection, whenContainedInInstancesOf: [InstructionsBannerView.self]).primaryColor = primaryColor
+        }
+        
+        if let secondaryColorString = maneuver["secondaryColor"],
+          let secondaryColor = UIColor(hex: secondaryColorString) {
+          print("Setting maneuver secondaryColor to \(secondaryColor)")
+           ManeuverView.appearance(for: self.traitCollection, whenContainedInInstancesOf: [InstructionsBannerView.self]).secondaryColor = secondaryColor
+        }
+
+        if let primaryColorHighlightedString = maneuver["primaryColorHighlighted"],
+          let primaryColorHighlighted = UIColor(hex: primaryColorHighlightedString) {
+          print("Setting maneuver primaryColorHighlighted to \(primaryColorHighlighted)")
+          ManeuverView.appearance(for: self.traitCollection, whenContainedInInstancesOf: [InstructionsBannerView.self]).primaryColorHighlighted = primaryColorHighlighted
+        }
+        
+        if let secondaryColorHighlightedString = maneuver["secondaryColorHighlighted"],
+          let secondaryColorHighlighted = UIColor(hex: secondaryColorHighlightedString) {
+          print("Setting maneuver secondaryColorHighlighted to \(secondaryColorHighlighted)")
+          ManeuverView.appearance(for: self.traitCollection, whenContainedInInstancesOf: [InstructionsBannerView.self]).secondaryColorHighlighted = secondaryColorHighlighted
+        }
+      }
+
+      if let primary = styles["primary"] as? [String: String] {
+        if let normalTextColorString = primary["normalTextColor"],
+          let normalTextColor = UIColor(hex: normalTextColorString) {
+          print("Setting primary normalTextColor to \(normalTextColor)")
+          PrimaryLabel.appearance(for: self.traitCollection, whenContainedInInstancesOf: [InstructionsBannerView.self]).normalTextColor = normalTextColor
+        }
+      }
+          
+      if let secondary = styles["secondary"] as? [String: String] {
+        if let normalTextColorString = secondary["normalTextColor"],
+          let normalTextColor = UIColor(hex: normalTextColorString) {
+          print("Setting secondary normalTextColor to \(normalTextColor)")
+          SecondaryLabel.appearance(for: self.traitCollection, whenContainedInInstancesOf: [InstructionsBannerView.self]).normalTextColor = normalTextColor
+        }
+      }
+          
+      if let distance = styles["distance"] as? [String: String] {
+        if let unitTextColorString = distance["unitTextColor"],
+          let unitTextColor = UIColor(hex: unitTextColorString) {
+          print("Setting distance unitTextColor to \(unitTextColor)")
+          DistanceLabel.appearance(for: self.traitCollection, whenContainedInInstancesOf: [InstructionsBannerView.self]).unitTextColor = unitTextColor
+        }
+            
+        if let valueTextColorString = distance["valueTextColor"],
+          let valueTextColor = UIColor(hex: valueTextColorString) {
+          print("Setting distance valueTextColor to \(valueTextColor)")
+          DistanceLabel.appearance(for: self.traitCollection, whenContainedInInstancesOf: [InstructionsBannerView.self]).valueTextColor = valueTextColor
+        }
+      }
+      
+      if let floatingButtons = styles["floatingButtons"] as? [String: String] {
+        if let tintColorString = floatingButtons["tintColor"],
+          let tintColor = UIColor(hex: tintColorString) {
+          print("Setting floatingButtons tintColor to \(tintColor)")
+          FloatingButton.appearance(for: self.traitCollection, whenContainedInInstancesOf: [NavigationView.self]).tintColor = tintColor
+        }
+            
+        if let backgroundColorString = floatingButtons["backgroundColor"],
+          let backgroundColor = UIColor(hex: backgroundColorString) {
+          print("Setting floatingButtons backgroundColor to \(backgroundColor)")
+          FloatingButton.appearance(for: self.traitCollection, whenContainedInInstancesOf: [NavigationView.self]).backgroundColor = backgroundColor
+        }
+        
+        
+        if let borderColorString = floatingButtons["borderColor"],
+          let borderColor = UIColor(hex: borderColorString) {
+          print("Setting floatingButtons borderColor to \(borderColor)")
+          FloatingButton.appearance(for: self.traitCollection, whenContainedInInstancesOf: [NavigationView.self]).borderColor = borderColor
+        }
+      }
+    } else {
+      print("Styles dictionary is not in the expected format.")
+    }
   }
 }
