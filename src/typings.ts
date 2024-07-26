@@ -56,7 +56,7 @@ type ComponentStyle = {
   timeRemaining: {
     trafficUnknownColor?: string;
     trafficLowColor?: string;
-    trafficMediumColor?: string;
+    trafficModerateColor?: string;
     trafficHeavyColor?: string;
     trafficSevereColor?: string;
   };

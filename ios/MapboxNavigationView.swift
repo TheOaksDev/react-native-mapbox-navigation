@@ -305,10 +305,10 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
           TimeRemainingLabel.appearance(for: self.traitCollection).trafficLowColor = trafficLowColor
         }
         
-        if let trafficMediumColorString = timeRemaining["trafficMediumColor"],
-          let trafficMediumColor = UIColor(hex: trafficMediumColorString) {
-          print("Setting trafficMediumColor to \(trafficMediumColor)")
-          TimeRemainingLabel.appearance(for: self.traitCollection).trafficMediumColor = trafficMediumColor
+        if let trafficModerateColorString = timeRemaining["trafficModerateColor"],
+          let trafficModerateColor = UIColor(hex: trafficModerateColorString) {
+          print("Setting trafficModerateColor to \(trafficModerateColor)")
+          TimeRemainingLabel.appearance(for: self.traitCollection).trafficModerateColor = trafficModerateColor
         }
 
         if let trafficHeavyColorString = timeRemaining["trafficHeavyColor"],
