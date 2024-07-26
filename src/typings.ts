@@ -53,9 +53,15 @@ type ComponentStyle = {
     backgroundColor?: string;
     borderColor?: string;
   };
+  timeRemaining: {
+    trafficUnknownColor?: string;
+    trafficLowColor?: string;
+    trafficMediumColor?: string;
+    trafficHeavyColor?: string;
+    trafficSevereColor?: string;
+  };
   footer: {
     totalDistanceTextColor?: string;
-    totalDurationTextColor?: string;
     arrivalTimeTextColor?: string;
   };
 };

@@ -278,23 +278,49 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
         }
       }
         
-      if let distance = styles["footer"] as? [String: String] {
-        if let totalDistanceTextColorString = distance["totalDistanceTextColor"],
+      if let footer = styles["footer"] as? [String: String] {
+        if let totalDistanceTextColorString = footer["totalDistanceTextColor"],
           let totalDistanceTextColor = UIColor(hex: totalDistanceTextColorString) {
-          print("Setting distance unitTextColor to \(totalDistanceTextColor)")
+          print("Setting totalDistanceTextColor to \(totalDistanceTextColor)")
           DistanceRemainingLabel.appearance(for: self.traitCollection).normalTextColor = totalDistanceTextColor
         }
+        
+        if let arrivalTimeTextColorString = footer["arrivalTimeTextColor"],
+          let arrivalTimeTextColor = UIColor(hex: arrivalTimeTextColorString) {
+          print("Setting arrivalTimeTextColor to \(arrivalTimeTextColor)")
+          ArrivalTimeLabel.appearance(for: self.traitCollection).normalTextColor = arrivalTimeTextColor
+        }
+      }
+
+      if let timeRemaining = styles["timeRemaining"] as? [String: String] {
+        if let trafficUnknownColorString = timeRemaining["trafficUnknownColor"],
+          let trafficUnknownColor = UIColor(hex: trafficUnknownColorString) {
+          print("Setting trafficUnknownColor to \(trafficUnknownColor)")
+          TimeRemainingLabel.appearance(for: self.traitCollection).trafficUnknownColor = trafficUnknownColor
+        }
               
-        if let totalDurationTextColorString = distance["totalDurationTextColor"],
-          let totalDurationTextColor = UIColor(hex: totalDurationTextColorString) {
-          print("Setting distance unitTextColor to \(totalDurationTextColor)")
-          DestinationLabel.appearance(for: self.traitCollection).normalTextColor = totalDurationTextColor
+        if let trafficLowColorString = timeRemaining["trafficLowColor"],
+          let trafficLowColor = UIColor(hex: trafficLowColorString) {
+          print("Setting trafficLowColor to \(trafficLowColor)")
+          TimeRemainingLabel.appearance(for: self.traitCollection).trafficLowColor = trafficLowColor
         }
         
-        if let arrivalTimeTextColorString = distance["arrivalTimeTextColor"],
-          let arrivalTimeTextColor = UIColor(hex: arrivalTimeTextColorString) {
-          print("Setting distance unitTextColor to \(arrivalTimeTextColor)")
-          ArrivalTimeLabel.appearance(for: self.traitCollection).normalTextColor = arrivalTimeTextColor
+        if let trafficMediumColorString = timeRemaining["trafficMediumColor"],
+          let trafficMediumColor = UIColor(hex: trafficMediumColorString) {
+          print("Setting trafficMediumColor to \(trafficMediumColor)")
+          TimeRemainingLabel.appearance(for: self.traitCollection).trafficMediumColor = trafficMediumColor
+        }
+
+        if let trafficHeavyColorString = timeRemaining["trafficHeavyColor"],
+          let trafficHeavyColor = UIColor(hex: trafficHeavyColorString) {
+          print("Setting trafficHeavyColor to \(trafficHeavyColor)")
+          TimeRemainingLabel.appearance(for: self.traitCollection).trafficHeavyColor = trafficHeavyColor
+        }
+
+        if let trafficSevereColorString = timeRemaining["trafficSevereColor"],
+          let trafficSevereColor = UIColor(hex: trafficSevereColorString) {
+          print("Setting trafficSevereColor to \(trafficSevereColor)")
+          TimeRemainingLabel.appearance(for: self.traitCollection).trafficSevereColor = trafficSevereColor
         }
       }
       
