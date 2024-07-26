@@ -58,15 +58,15 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   @objc var destination: NSArray = [] {
     didSet { setNeedsLayout() }
   }
-
+    
+  @objc var mapStyleURL: String = ""
   @objc var viewStyles: NSDictionary = [:]
   
   @objc var shouldSimulateRoute: Bool = false
   @objc var showsEndOfRouteFeedback: Bool = false
   @objc var hideStatusView: Bool = false
+  @objc var hideReportFeedback: Bool = false
   @objc var mute: Bool = false
-  @objc var showsReportFeedback: Bool = false
-  @objc var mapStyleURL: String = ""
 
   @objc var onLocationChange: RCTDirectEventBlock?
   @objc var onRouteProgressChange: RCTDirectEventBlock?
@@ -103,7 +103,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   
   private func embed() {
     guard origin.count == 2 && destination.count == 2 else { return }
-    
+
     embedding = true
 
     let originWaypoint = Waypoint(coordinate: CLLocationCoordinate2D(latitude: origin[1] as! CLLocationDegrees, longitude: origin[0] as! CLLocationDegrees))
@@ -130,8 +130,12 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
           let navigationOptions = NavigationOptions(navigationService: navigationService)
           let vc = NavigationViewController(for: response, routeIndex: 0, routeOptions: options, navigationOptions: navigationOptions)
           
-          vc.navigationMapView?.mapView.mapboxMap.style.styleManager.setStyleURIForUri(strongSelf.mapStyleURL)
-          vc.showsReportFeedback = strongSelf.showsReportFeedback
+          print("MAP URL \(strongSelf.mapStyleURL)")
+          if !strongSelf.mapStyleURL.isEmpty {
+            vc.navigationMapView?.mapView.mapboxMap.style.styleManager.setStyleURIForUri(strongSelf.mapStyleURL)
+          }
+          
+          vc.showsReportFeedback = !strongSelf.hideReportFeedback
           vc.showsEndOfRouteFeedback = strongSelf.showsEndOfRouteFeedback
           StatusView.appearance().isHidden = strongSelf.hideStatusView
 

@@ -77,6 +77,7 @@ export interface IMapboxNavigationProps {
   onArrive?: () => void;
   showsEndOfRouteFeedback?: boolean;
   hideStatusView?: boolean;
+  hideReportFeedback?: boolean;
   mute?: boolean;
   viewStyles?: ComponentStyle;
   mapStyleURL?: string;
