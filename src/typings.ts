@@ -79,4 +79,5 @@ export interface IMapboxNavigationProps {
   hideStatusView?: boolean;
   mute?: boolean;
   viewStyles?: ComponentStyle;
+  mapStyleURL?: string;
 }

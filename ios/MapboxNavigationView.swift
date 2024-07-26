@@ -66,7 +66,8 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   @objc var hideStatusView: Bool = false
   @objc var mute: Bool = false
   @objc var showsReportFeedback: Bool = false
-  
+  @objc var mapStyleURL: String = ""
+
   @objc var onLocationChange: RCTDirectEventBlock?
   @objc var onRouteProgressChange: RCTDirectEventBlock?
   @objc var onError: RCTDirectEventBlock?
@@ -129,6 +130,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
           let navigationOptions = NavigationOptions(navigationService: navigationService)
           let vc = NavigationViewController(for: response, routeIndex: 0, routeOptions: options, navigationOptions: navigationOptions)
           
+          vc.navigationMapView?.mapView.mapboxMap.style.styleManager.setStyleURIForUri(strongSelf.mapStyleURL)
           vc.showsReportFeedback = strongSelf.showsReportFeedback
           vc.showsEndOfRouteFeedback = strongSelf.showsEndOfRouteFeedback
           StatusView.appearance().isHidden = strongSelf.hideStatusView
