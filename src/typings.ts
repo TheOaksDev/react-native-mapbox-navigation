@@ -31,28 +31,33 @@ type ComponentStyle = {
     bottomBannerBackgroundColor?: string;
     instructionBannerBackgroundColor?: string;
     stepInstructionsBackgroundColor?: string;
-  },
+  };
   maneuver: {
     primaryColor?: string;
     secondaryColor?: string;
     primaryColorHighlighted?: string;
     secondaryColorHighlighted?: string;
-  },
+  };
   primary: {
     normalTextColor?: string;
-  },
+  };
   secondary: {
     normalTextColor?: string;
-  },
+  };
   distance: {
     unitTextColor?: string;
     valueTextColor?: string;
-  },
+  };
   floatingButtons: {
     tintColor?: string;
     backgroundColor?: string;
     borderColor?: string;
-  },
+  };
+  footer: {
+    totalDistanceTextColor?: string;
+    totalDurationTextColor?: string;
+    arrivalTimeTextColor?: string;
+  };
 };
 
 export interface IMapboxNavigationProps {
