@@ -176,28 +176,38 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
       let test = styles["topBannerBackgroundColor"]
       print("Top Banner Test: \(styles["topBannerBackgroundColor"])")
 
-      if let topBannerBackgroundColorString = styles["topBannerBackgroundColor"] as? String,
-        let topBannerBackgroundColor = UIColor(hex: topBannerBackgroundColorString) {
-        print("Setting topBannerBackgroundColor to \(topBannerBackgroundColor)")
-        TopBannerView.appearance(for: self.traitCollection).backgroundColor = topBannerBackgroundColor
-      }
+      if let banners = styles["banner"] as? [String: String] {
+        if let topBannerBackgroundColorString = banners["topBannerBackgroundColor"] as? String,
+          let topBannerBackgroundColor = UIColor(hex: topBannerBackgroundColorString) {
+          print("Setting topBannerBackgroundColor to \(topBannerBackgroundColor)")
+          TopBannerView.appearance(for: self.traitCollection).backgroundColor = topBannerBackgroundColor
+        } else {
+          print("Failed to set topBannerBackgroundColor")
+        }
 
-      if let bottomBannerBackgroundColorString = styles["bottomBannerBackgroundColor"] as? String,
-        let bottomBannerBackgroundColor = UIColor(hex: bottomBannerBackgroundColorString) {
-        print("Setting bottomBannerBackgroundColor to \(bottomBannerBackgroundColor)")
-        BottomBannerView.appearance(for: self.traitCollection).backgroundColor = bottomBannerBackgroundColor
-      }
+        if let bottomBannerBackgroundColorString = banners["bottomBannerBackgroundColor"] as? String,
+          let bottomBannerBackgroundColor = UIColor(hex: bottomBannerBackgroundColorString) {
+          print("Setting bottomBannerBackgroundColor to \(bottomBannerBackgroundColor)")
+          BottomBannerView.appearance(for: self.traitCollection).backgroundColor = bottomBannerBackgroundColor
+        } else {
+          print("Failed to set bottomBannerBackgroundColor")
+        }
 
-      if let instructionBannerBackgroundColorString = styles["instructionBannerBackgroundColor"] as? String,
-        let instructionBannerBackgroundColor = UIColor(hex: instructionBannerBackgroundColorString) {
-        print("Setting instructionBannerBackgroundColor to \(instructionBannerBackgroundColor)")
-        InstructionsBannerView.appearance(for: self.traitCollection).backgroundColor = instructionBannerBackgroundColor
-      }
+        if let instructionBannerBackgroundColorString = banners["instructionBannerBackgroundColor"] as? String,
+          let instructionBannerBackgroundColor = UIColor(hex: instructionBannerBackgroundColorString) {
+          print("Setting instructionBannerBackgroundColor to \(instructionBannerBackgroundColor)")
+          InstructionsBannerView.appearance(for: self.traitCollection).backgroundColor = instructionBannerBackgroundColor
+        } else {
+          print("Failed to set instructionBannerBackgroundColor")
+        }
 
-      if let stepInstructionsBackgroundColorString = styles["stepInstructionsBackgroundColor"] as? String,
-        let stepInstructionsBackgroundColor = UIColor(hex: stepInstructionsBackgroundColorString) {
-        print("Setting stepInstructionsBackgroundColor to \(stepInstructionsBackgroundColor)")
-        StepInstructionsView.appearance(for: self.traitCollection).backgroundColor = stepInstructionsBackgroundColor
+        if let stepInstructionsBackgroundColorString = banners["stepInstructionsBackgroundColor"] as? String,
+          let stepInstructionsBackgroundColor = UIColor(hex: stepInstructionsBackgroundColorString) {
+          print("Setting stepInstructionsBackgroundColor to \(stepInstructionsBackgroundColor)")
+          StepInstructionsView.appearance(for: self.traitCollection).backgroundColor = stepInstructionsBackgroundColor
+        } else {
+          print("Failed to set stepInstructionsBackgroundColor")
+        }
       }
 
       if let maneuver = styles["maneuver"] as? [String: String] {

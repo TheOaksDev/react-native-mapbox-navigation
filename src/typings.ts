@@ -26,10 +26,12 @@ type OnErrorEvent = {
 };
 
 type ComponentStyle = {
-  topBannerBackgroundColor?: string;
-  bottomBannerBackgroundColor?: string;
-  instructionBannerBackgroundColor?: string;
-  stepInstructionsBackgroundColor?: string;
+  banner: {
+    topBannerBackgroundColor?: string;
+    bottomBannerBackgroundColor?: string;
+    instructionBannerBackgroundColor?: string;
+    stepInstructionsBackgroundColor?: string;
+  },
   maneuver: {
     primaryColor?: string;
     secondaryColor?: string;
