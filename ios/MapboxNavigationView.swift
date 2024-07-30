@@ -191,50 +191,6 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
         } else {
           print("Failed to set topBannerBackgroundColor")
         }
-
-        if let statusView = styles["statusView"] as? [String: String] {
-          if let statusViewBackgroundColorString = statusView["statusViewBackgroundColor"],
-          let statusViewBackgroundColor = UIColor(hex: statusViewBackgroundColorString) {
-            print("Setting statusViewBackgroundColor to \(statusViewBackgroundColor)")
-            StatusView.appearance(for: self.traitCollection).backgroundColor = statusViewBackgroundColor
-          } else {
-            print("Failed to set statusViewBackgroundColor")
-          }
-
-          if let statusViewTextColorString = statusView["statusViewTextColor"],
-          let statusViewTextColor = UIColor(hex: statusViewTextColorString) {
-            print("Setting statusViewTextColor to \(statusViewTextColor)")
-            StatusView.appearance(for: self.traitCollection).textLabel.textColor = statusViewTextColor
-          } else {
-            print("Failed to set statusViewTextColor")
-          }
-        }
-
-        if let dismissButton = styles["dismissButton"] as? [String: String] {
-          if let dismissButtonBackgroundColorString = dismissButton["dismissButtonBackgroundColor"],
-          let dismissButtonBackgroundColor = UIColor(hex: dismissButtonBackgroundColorString) {
-            print("Setting dismissButtonBackgroundColor to \(dismissButtonBackgroundColor)")
-            DismissButton.appearance(for: self.traitCollection).backgroundColor = dismissButtonBackgroundColor
-          } else {
-            print("Failed to set dismissButtonBackgroundColor")
-          }
-
-          if let dismissButtonTextColorString = dismissButton["dismissButtonTextColor"],
-          let dismissButtonTextColor = UIColor(hex: dismissButtonTextColorString) {
-            print("Setting dismissButtonTextColor to \(dismissButtonTextColor)")
-            DismissButton.appearance(for: self.traitCollection).textColor = dismissButtonTextColor
-          } else {
-            print("Failed to set dismissButtonTextColor")
-          }
-        }
-
-        if let cancelButtonColorString = banners["cancelButtonColor"],
-          let cancelButtonColor = UIColor(hex: cancelButtonColorString) {
-          print("Setting cancelButtonColor to \(cancelButtonColor)")
-          CancelButton.appearance(for: self.traitCollection).backgroundColor = cancelButtonColor
-        } else {
-          print("Failed to set cancelButtonColor")
-        }
         
         if let bottomBannerBackgroundColorString = banners["bottomBannerBackgroundColor"],
           let bottomBannerBackgroundColor = UIColor(hex: bottomBannerBackgroundColorString) {
@@ -395,7 +351,51 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
         }
       }
 
+      if let statusView = styles["statusView"] as? [String: String] {
+        if let statusViewBackgroundColorString = statusView["backgroundColor"],
+        let statusViewBackgroundColor = UIColor(hex: statusViewBackgroundColorString) {
+          print("Setting statusViewBackgroundColor to \(statusViewBackgroundColor)")
+          StatusView.appearance(for: self.traitCollection).backgroundColor = statusViewBackgroundColor
+        } else {
+          print("Failed to set statusViewBackgroundColor")
+        }
 
+        if let statusViewTextColorString = statusView["textColor"],
+        let statusViewTextColor = UIColor(hex: statusViewTextColorString) {
+          print("Setting statusViewTextColor to \(statusViewTextColor)")
+          StatusView.appearance(for: self.traitCollection).tintColor = statusViewTextColor
+        } else {
+          print("Failed to set statusViewTextColor")
+        }
+      }
+
+      if let dismissButton = styles["dismissButton"] as? [String: String] {
+        if let dismissButtonBackgroundColorString = dismissButton["backgroundColor"],
+        let dismissButtonBackgroundColor = UIColor(hex: dismissButtonBackgroundColorString) {
+          print("Setting dismissButtonBackgroundColor to \(dismissButtonBackgroundColor)")
+          DismissButton.appearance(for: self.traitCollection).backgroundColor = dismissButtonBackgroundColor
+        } else {
+          print("Failed to set dismissButtonBackgroundColor")
+        }
+
+        if let dismissButtonTextColorString = dismissButton["textColor"],
+        let dismissButtonTextColor = UIColor(hex: dismissButtonTextColorString) {
+          print("Setting dismissButtonTextColor to \(dismissButtonTextColor)")
+          DismissButton.appearance(for: self.traitCollection).textColor = dismissButtonTextColor
+        } else {
+          print("Failed to set dismissButtonTextColor")
+        }
+      }
+
+      if let cancelButton = styles["cancelButton"] as? [String: String] {
+        if let cancelButtonBackgroundColorString = cancelButton["backgroundColor"],
+        let cancelButtonBackgroundColor = UIColor(hex: cancelButtonBackgroundColorString) {
+          print("Setting cancelButtonColor to \(cancelButtonColor)")
+          CancelButton.appearance(for: self.traitCollection).backgroundColor = cancelButtonBackgroundColor
+        } else {
+          print("Failed to set cancelButtonColor")
+        }
+      }
     } else {
       print("Styles dictionary is not in the expected format.")
     }
