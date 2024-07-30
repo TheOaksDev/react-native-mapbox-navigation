@@ -388,12 +388,22 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
       }
 
       if let cancelButton = styles["cancelButton"] as? [String: String] {
-        if let cancelButtonBackgroundColorString = cancelButton["backgroundColor"],
-        let cancelButtonBackgroundColor = UIColor(hex: cancelButtonBackgroundColorString) {
-          print("Setting cancelButtonColor to \(cancelButtonColor)")
-          CancelButton.appearance(for: self.traitCollection).backgroundColor = cancelButtonBackgroundColor
+        if let cancelButtonTextColorString = cancelButton["textColor"],
+        let cancelButtonTextColor = UIColor(hex: cancelButtonTextColorString) {
+          print("Setting cancelButtonColor to \(cancelButtonTextColor)")
+          CancelButton.appearance(for: self.traitCollection).tintColor = cancelButtonTextColor
         } else {
-          print("Failed to set cancelButtonColor")
+          print("Failed to set cancelButtonTextColor")
+        }
+      }
+
+      if let separatorView = styles["separatorView"] as? [String: String] {
+        if let separatorViewBackgroundColorString = separatorView["backgroundColor"],
+        let separatorViewBackgroundColor = UIColor(hex: separatorViewBackgroundColorString) {
+          print("Setting separatorViewBackgroundColor to \(separatorViewBackgroundColor)")
+          SeparatorView.appearance(for: self.traitCollection).backgroundColor = separatorViewBackgroundColor
+        } else {
+          print("Failed to set separatorViewBackgroundColor")
         }
       }
     } else {
