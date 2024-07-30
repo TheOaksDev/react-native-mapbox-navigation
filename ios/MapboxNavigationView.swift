@@ -208,6 +208,14 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
           print("Failed to set instructionBannerBackgroundColor")
         }
 
+        if let nextBannerBackgroundColorString = banners["nextBannerBackgroundColor"],
+          let nextBannerBackgroundColor = UIColor(hex: nextBannerBackgroundColorString) {
+          print("Setting nextBannerBackgroundColor to \(nextBannerBackgroundColor)")
+          NextBannerView.appearance(for: self.traitCollection).backgroundColor = nextBannerBackgroundColor
+        } else {
+          print("Failed to set nextBannerBackgroundColor")
+        }
+
         if let stepInstructionsBackgroundColorString = banners["stepInstructionsBackgroundColor"],
           let stepInstructionsBackgroundColor = UIColor(hex: stepInstructionsBackgroundColorString) {
           print("Setting stepInstructionsBackgroundColor to \(stepInstructionsBackgroundColor)")
@@ -223,7 +231,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
           print("Setting maneuver primaryColor to \(primaryColor)")
            ManeuverView.appearance(for: self.traitCollection, whenContainedInInstancesOf: [InstructionsBannerView.self]).primaryColor = primaryColor
            ManeuverView.appearance(for: self.traitCollection, whenContainedInInstancesOf: [StepInstructionsView.self]).primaryColor = primaryColor
-
+           ManeuverView.appearance(for: self.traitCollection, whenContainedInInstancesOf: [NextBannerView.self]).primaryColor = primaryColor
         } else {
           print("Failed to set set maneuver instruction primary color")
         }
@@ -233,6 +241,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
           print("Setting maneuver secondaryColor to \(secondaryColor)")
            ManeuverView.appearance(for: self.traitCollection, whenContainedInInstancesOf: [InstructionsBannerView.self]).secondaryColor = secondaryColor
            ManeuverView.appearance(for: self.traitCollection, whenContainedInInstancesOf: [StepInstructionsView.self]).secondaryColor = secondaryColor
+           ManeuverView.appearance(for: self.traitCollection, whenContainedInInstancesOf: [NextBannerView.self]).secondaryColor = secondaryColor
         }
 
         if let primaryColorHighlightedString = maneuver["primaryColorHighlighted"],
@@ -240,6 +249,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
           print("Setting maneuver primaryColorHighlighted to \(primaryColorHighlighted)")
           ManeuverView.appearance(for: self.traitCollection, whenContainedInInstancesOf: [InstructionsBannerView.self]).primaryColorHighlighted = primaryColorHighlighted
           ManeuverView.appearance(for: self.traitCollection, whenContainedInInstancesOf: [StepInstructionsView.self]).primaryColorHighlighted = primaryColorHighlighted
+          ManeuverView.appearance(for: self.traitCollection, whenContainedInInstancesOf: [NextBannerView.self]).primaryColorHighlighted = primaryColorHighlighted
         }
         
         if let secondaryColorHighlightedString = maneuver["secondaryColorHighlighted"],
@@ -247,6 +257,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
           print("Setting maneuver secondaryColorHighlighted to \(secondaryColorHighlighted)")
           ManeuverView.appearance(for: self.traitCollection, whenContainedInInstancesOf: [InstructionsBannerView.self]).secondaryColorHighlighted = secondaryColorHighlighted
           ManeuverView.appearance(for: self.traitCollection, whenContainedInInstancesOf: [StepInstructionsView.self]).secondaryColorHighlighted = secondaryColorHighlighted
+          ManeuverView.appearance(for: self.traitCollection, whenContainedInInstancesOf: [NextBannerView.self]).secondaryColorHighlighted = secondaryColorHighlighted
         }
       }
 
@@ -256,6 +267,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
           print("Setting primary normalTextColor to \(normalTextColor)")
           PrimaryLabel.appearance(for: self.traitCollection, whenContainedInInstancesOf: [InstructionsBannerView.self]).normalTextColor = normalTextColor
           PrimaryLabel.appearance(for: self.traitCollection, whenContainedInInstancesOf: [StepInstructionsView.self]).normalTextColor = normalTextColor
+          NextInstructionLabel.appearance(for: self.traitCollection, whenContainedInInstancesOf: [NextBannerView.self]).normalTextColor = normalTextColor
         }
       }
           
@@ -353,7 +365,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
 
       if let statusView = styles["statusView"] as? [String: String] {
         if let statusViewBackgroundColorString = statusView["backgroundColor"],
-        let statusViewBackgroundColor = UIColor(hex: statusViewBackgroundColorString) {
+          let statusViewBackgroundColor = UIColor(hex: statusViewBackgroundColorString) {
           print("Setting statusViewBackgroundColor to \(statusViewBackgroundColor)")
           StatusView.appearance(for: self.traitCollection).backgroundColor = statusViewBackgroundColor
         } else {
@@ -361,7 +373,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
         }
 
         if let statusViewTextColorString = statusView["textColor"],
-        let statusViewTextColor = UIColor(hex: statusViewTextColorString) {
+          let statusViewTextColor = UIColor(hex: statusViewTextColorString) {
           print("Setting statusViewTextColor to \(statusViewTextColor)")
           StatusView.appearance(for: self.traitCollection).tintColor = statusViewTextColor
         } else {
@@ -371,7 +383,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
 
       if let dismissButton = styles["dismissButton"] as? [String: String] {
         if let dismissButtonBackgroundColorString = dismissButton["backgroundColor"],
-        let dismissButtonBackgroundColor = UIColor(hex: dismissButtonBackgroundColorString) {
+          let dismissButtonBackgroundColor = UIColor(hex: dismissButtonBackgroundColorString) {
           print("Setting dismissButtonBackgroundColor to \(dismissButtonBackgroundColor)")
           DismissButton.appearance(for: self.traitCollection).backgroundColor = dismissButtonBackgroundColor
         } else {
@@ -379,7 +391,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
         }
 
         if let dismissButtonTextColorString = dismissButton["textColor"],
-        let dismissButtonTextColor = UIColor(hex: dismissButtonTextColorString) {
+          let dismissButtonTextColor = UIColor(hex: dismissButtonTextColorString) {
           print("Setting dismissButtonTextColor to \(dismissButtonTextColor)")
           DismissButton.appearance(for: self.traitCollection).textColor = dismissButtonTextColor
         } else {
@@ -389,7 +401,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
 
       if let cancelButton = styles["cancelButton"] as? [String: String] {
         if let cancelButtonTextColorString = cancelButton["textColor"],
-        let cancelButtonTextColor = UIColor(hex: cancelButtonTextColorString) {
+          let cancelButtonTextColor = UIColor(hex: cancelButtonTextColorString) {
           print("Setting cancelButtonColor to \(cancelButtonTextColor)")
           CancelButton.appearance(for: self.traitCollection).tintColor = cancelButtonTextColor
         } else {
@@ -399,7 +411,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
 
       if let separatorView = styles["separatorView"] as? [String: String] {
         if let separatorViewBackgroundColorString = separatorView["backgroundColor"],
-        let separatorViewBackgroundColor = UIColor(hex: separatorViewBackgroundColorString) {
+          let separatorViewBackgroundColor = UIColor(hex: separatorViewBackgroundColorString) {
           print("Setting separatorViewBackgroundColor to \(separatorViewBackgroundColor)")
           SeparatorView.appearance(for: self.traitCollection).backgroundColor = separatorViewBackgroundColor
         } else {
