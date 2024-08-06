@@ -34,6 +34,9 @@ const Navigation = props => {
           onCancelNavigation={event => {
             alert('Cancelled navigation event');
           }}
+          onReroute={event => {
+            alert('Rerouted event');
+          }}
         />
       </View>
     </View>

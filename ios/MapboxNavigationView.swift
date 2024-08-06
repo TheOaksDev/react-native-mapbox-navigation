@@ -72,6 +72,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   @objc var onRouteProgressChange: RCTDirectEventBlock?
   @objc var onError: RCTDirectEventBlock?
   @objc var onCancelNavigation: RCTDirectEventBlock?
+  @objc var onReroute: RCTDirectEventBlock?
   @objc var onArrive: RCTDirectEventBlock?
   
   override init(frame: CGRect) {
@@ -161,6 +162,10 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
                             "durationRemaining": progress.durationRemaining,
                             "fractionTraveled": progress.fractionTraveled,
                             "distanceRemaining": progress.distanceRemaining])
+  }
+
+  func navigationViewController(_ navigationViewController: NavigationViewController, didRerouteAlong route: Route, at location: CLLocation, proactive: Bool) {
+    onReroute?(["route": route, "start": location])
   }
   
   func navigationViewControllerDidDismiss(_ navigationViewController: NavigationViewController, byCanceling canceled: Bool) {

@@ -10,6 +10,13 @@ type OnLocationChangeEvent = {
   };
 };
 
+type OnRerouteEvent = {
+  nativeEvent?: {
+    route: object;
+    start: object;
+  };
+};
+
 type OnRouteProgressChangeEvent = {
   nativeEvent?: {
     distanceTraveled: number;
@@ -74,6 +81,7 @@ export interface IMapboxNavigationProps {
   onRouteProgressChange?: (event: OnRouteProgressChangeEvent) => void;
   onError?: (event: OnErrorEvent) => void;
   onCancelNavigation?: () => void;
+  onReroute?: (event: OnRerouteEvent) => void;
   onArrive?: () => void;
   showsEndOfRouteFeedback?: boolean;
   hideStatusView?: boolean;
