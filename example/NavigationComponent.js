@@ -14,7 +14,6 @@ const Navigation = props => {
           shouldSimulateRoute={true}
           origin={origin}
           destination={destination}
-          showsEndOfRouteFeedback={false}
           hideStatusView
           onLocationChange={event => {
             console.log('onLocationChange', event.nativeEvent);
@@ -33,9 +32,6 @@ const Navigation = props => {
           }}
           onCancelNavigation={event => {
             alert('Cancelled navigation event');
-          }}
-          onReroute={event => {
-            alert('Rerouted event');
           }}
         />
       </View>

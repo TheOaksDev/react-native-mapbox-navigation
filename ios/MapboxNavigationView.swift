@@ -72,7 +72,7 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   @objc var onRouteProgressChange: RCTDirectEventBlock?
   @objc var onError: RCTDirectEventBlock?
   @objc var onCancelNavigation: RCTDirectEventBlock?
-  @objc var onReroute: RCTDirectEventBlock?
+  
   @objc var onArrive: RCTDirectEventBlock?
   
   override init(frame: CGRect) {
@@ -157,15 +157,25 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   }
   
   func navigationViewController(_ navigationViewController: NavigationViewController, didUpdate progress: RouteProgress, with location: CLLocation, rawLocation: CLLocation) {
+    print("Did Update...")
     onLocationChange?(["longitude": location.coordinate.longitude, "latitude": location.coordinate.latitude])
     onRouteProgressChange?(["distanceTraveled": progress.distanceTraveled,
                             "durationRemaining": progress.durationRemaining,
                             "fractionTraveled": progress.fractionTraveled,
-                            "distanceRemaining": progress.distanceRemaining])
-  }
-
-  func navigationViewController(_ navigationViewController: NavigationViewController, didRerouteAlong route: Route, at location: CLLocation, proactive: Bool) {
-    onReroute?(["route": route, "start": location])
+                            "distanceRemaining": progress.distanceRemaining,
+                            "currentLeg": progress.currentLeg,
+                            "legIndex": progress.legIndex,
+                            "route": progress.route,
+                            "remainingLegs": progress.remainingLegs,
+                            "remainingSteps": progress.remainingSteps,
+                            "isFinalLeg": progress.isFinalLeg,
+                            "remainingWaypoints": progress.remainingWaypoints,
+                            "currentLegProgress": progress.currentLegProgress,
+                            "priorStep": progress.priorStep,
+                            "currentStep": progress.currentStep,
+                            "upcomingStep": progress.upcomingStep,
+                            "upcomingLeg": progress.upcomingLeg,
+                            "nearbyShape": progress.nearbyShape])
   }
   
   func navigationViewControllerDidDismiss(_ navigationViewController: NavigationViewController, byCanceling canceled: Bool) {
