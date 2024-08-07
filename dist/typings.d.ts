@@ -33,6 +33,7 @@ export interface IMapboxNavigationProps {
     onArrive?: () => void;
     showsEndOfRouteFeedback?: boolean;
     hideStatusView?: boolean;
+    hideLanesView?: boolean;
     hideTopBannerView?: boolean;
     hideBottomBannerView?: boolean;
     hideInstructionsBannerView?: boolean;
