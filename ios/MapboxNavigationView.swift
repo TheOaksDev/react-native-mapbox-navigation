@@ -65,6 +65,8 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   @objc var shouldSimulateRoute: Bool = false
   @objc var showsEndOfRouteFeedback: Bool = false
   @objc var hideStatusView: Bool = false
+  @objc var hideTopBannerView: Bool = false
+  @objc var hideBottomBannerView: Bool = false
   @objc var hideReportFeedback: Bool = false
   @objc var mute: Bool = false
 
@@ -126,6 +128,10 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
             return
           }
           
+          print("Creating navigation service...")
+          print("Route response: \(response)")
+          print("Route options: \(options)")
+          print("Simulate route: \(strongSelf.shouldSimulateRoute)")
           let navigationService = MapboxNavigationService(routeResponse: response, routeIndex: 0, routeOptions: options, simulating: strongSelf.shouldSimulateRoute ? .always : .never)
           
           let navigationOptions = NavigationOptions(navigationService: navigationService)
@@ -139,9 +145,11 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
           vc.showsReportFeedback = !strongSelf.hideReportFeedback
           vc.showsEndOfRouteFeedback = strongSelf.showsEndOfRouteFeedback
           StatusView.appearance().isHidden = strongSelf.hideStatusView
+          TopBannerView.appearance().isHidden = strongSelf.hideTopBannerView
+          BottomBannerView.appearance().isHidden = strongSelf.hideTopBannerView
 
           NavigationSettings.shared.voiceMuted = strongSelf.mute;
-          
+
           vc.delegate = strongSelf
         
           parentVC.addChild(vc)
@@ -158,24 +166,17 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   
   func navigationViewController(_ navigationViewController: NavigationViewController, didUpdate progress: RouteProgress, with location: CLLocation, rawLocation: CLLocation) {
     print("Did Update...")
+    let routeInfo = extractRouteInfo(from: progress)
+
     onLocationChange?(["longitude": location.coordinate.longitude, "latitude": location.coordinate.latitude])
     onRouteProgressChange?(["distanceTraveled": progress.distanceTraveled,
                             "durationRemaining": progress.durationRemaining,
                             "fractionTraveled": progress.fractionTraveled,
                             "distanceRemaining": progress.distanceRemaining,
-                            "currentLeg": progress.currentLeg,
                             "legIndex": progress.legIndex,
-                            "route": progress.route,
-                            "remainingLegs": progress.remainingLegs,
-                            "remainingSteps": progress.remainingSteps,
-                            "isFinalLeg": progress.isFinalLeg,
-                            "remainingWaypoints": progress.remainingWaypoints,
-                            "currentLegProgress": progress.currentLegProgress,
-                            "priorStep": progress.priorStep,
-                            "currentStep": progress.currentStep,
-                            "upcomingStep": progress.upcomingStep,
-                            "upcomingLeg": progress.upcomingLeg,
-                            "nearbyShape": progress.nearbyShape])
+                            "currentStepIndex": progress.currentLegProgress.stepIndex,
+                            "currentStepProgress": progress.currentLegProgress.currentStepProgress.distanceRemaining,
+                            "route": routeInfo])
   }
   
   func navigationViewControllerDidDismiss(_ navigationViewController: NavigationViewController, byCanceling canceled: Bool) {
@@ -436,5 +437,69 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
     } else {
       print("Styles dictionary is not in the expected format.")
     }
+  }
+
+  private func extractRouteInfo(from progress: RouteProgress?) -> [String: Any] {
+    guard let progress = progress else { return [:] }
+    
+    let route = progress.route
+    let legs = route.legs.map { leg -> [String: Any] in
+      let steps = leg.steps.map { step -> [String: Any] in
+          
+        var visualInstructions: [[String: Any]] = []
+      
+        if let instructions = step.instructionsDisplayedAlongStep {
+          visualInstructions = instructions.map { instruction -> [String: Any] in
+            var instructionInfo: [String: Any] = [:]
+            
+            if let primaryInstruction = instruction.primaryInstruction.text {
+              instructionInfo["primaryText"] = primaryInstruction
+            }
+            
+            if let secondaryInstruction = instruction.secondaryInstruction?.text {
+              instructionInfo["secondaryText"] = secondaryInstruction
+            }
+            
+            if let maneuverType = instruction.primaryInstruction.maneuverType {
+              instructionInfo["maneuverType"] = maneuverType.rawValue
+            }
+            
+            if let maneuverDirection = instruction.primaryInstruction.maneuverDirection {
+              instructionInfo["maneuverDirection"] = maneuverDirection.rawValue
+            }
+            
+            instruction.primaryInstruction.components.forEach { component in
+              if case .image(let imageRepresentation, _) = component {
+                if let url = imageRepresentation.imageURL(scale: nil, format: .png) {
+                  instructionInfo["imageURL"] = url.absoluteString
+                }
+              }
+            }
+            
+            return instructionInfo
+          }
+        }
+          
+        return [
+          "distance": step.distance,
+          "expectedTravelTime": step.expectedTravelTime,
+          "instructions": step.instructions,
+          "maneuverType": step.maneuverType.rawValue,
+          "visualInstruction": visualInstructions,
+        ]
+      }
+      
+      return [
+        "distance": leg.distance,
+        "expectedTravelTime": leg.expectedTravelTime,
+        "steps": steps
+      ]
+    }
+    
+    return [
+      "distance": route.distance,
+      "expectedTravelTime": route.expectedTravelTime,
+      "legs": legs
+    ]
   }
 }

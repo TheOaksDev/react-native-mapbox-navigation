@@ -14,6 +14,7 @@ declare type OnRouteProgressChangeEvent = {
         durationRemaining: number;
         fractionTraveled: number;
         distanceRemaining: number;
+        route: object;
     };
 };
 declare type OnErrorEvent = {
@@ -32,6 +33,8 @@ export interface IMapboxNavigationProps {
     onArrive?: () => void;
     showsEndOfRouteFeedback?: boolean;
     hideStatusView?: boolean;
+    hideTopBannerView?: boolean;
+    hideBottomBannerView?: boolean;
     mute?: boolean;
 }
 export {};

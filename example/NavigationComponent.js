@@ -15,6 +15,8 @@ const Navigation = props => {
           origin={origin}
           destination={destination}
           hideStatusView
+          hideTopBannerView={false}
+          hideBottomBannerView={false}
           onLocationChange={event => {
             console.log('onLocationChange', event.nativeEvent);
           }}
