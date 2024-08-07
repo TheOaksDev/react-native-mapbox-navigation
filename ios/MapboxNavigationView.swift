@@ -67,6 +67,10 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   @objc var hideStatusView: Bool = false
   @objc var hideTopBannerView: Bool = false
   @objc var hideBottomBannerView: Bool = false
+  @objc var hideInstructionsBannerView: Bool = false
+  @objc var hideNextBannerView: Bool = false
+  @objc var hideStepInstructionsView: Bool = false
+
   @objc var hideReportFeedback: Bool = false
   @objc var mute: Bool = false
 
@@ -147,7 +151,10 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
           StatusView.appearance().isHidden = strongSelf.hideStatusView
           TopBannerView.appearance().isHidden = strongSelf.hideTopBannerView
           BottomBannerView.appearance().isHidden = strongSelf.hideTopBannerView
-
+          InstructionsBannerView.appearance().isHidden = strongSelf.hideInstructionsBannerView
+          NextBannerView.appearance().isHidden = strongSelf.hideNextBannerView
+          StepInstructionsView.appearance().isHidden = strongSelf.hideStepInstructionsView
+          
           NavigationSettings.shared.voiceMuted = strongSelf.mute;
 
           vc.delegate = strongSelf

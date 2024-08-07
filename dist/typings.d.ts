@@ -35,6 +35,9 @@ export interface IMapboxNavigationProps {
     hideStatusView?: boolean;
     hideTopBannerView?: boolean;
     hideBottomBannerView?: boolean;
+    hideInstructionsBannerView?: boolean;
+    hideNextBannerView?: boolean;
+    hideStepInstructionsView?: boolean;
     mute?: boolean;
 }
 export {};

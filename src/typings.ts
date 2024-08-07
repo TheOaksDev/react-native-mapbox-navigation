@@ -80,6 +80,9 @@ export interface IMapboxNavigationProps {
   hideStatusView?: boolean;
   hideTopBannerView?: boolean;
   hideBottomBannerView?: boolean;
+  hideInstructionsBannerView?: boolean;
+  hideNextBannerView?: boolean;
+  hideStepInstructionsView?: boolean;
   hideReportFeedback?: boolean;
   mute?: boolean;
   viewStyles?: ComponentStyle;
