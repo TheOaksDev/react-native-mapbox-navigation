@@ -46,6 +46,21 @@ extension UIColor {
   }
 }
 
+class AlwaysHiddenLanesView: LanesView {
+    override var isHidden: Bool {
+        get { return true }
+        set { /* Do nothing */ }
+    }
+    
+    override func show() {
+        // Do nothing
+    }
+    
+    override func hide() {
+        // Do nothing
+    }
+}
+
 class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
   weak var navViewController: NavigationViewController?
   var embedded: Bool
@@ -155,12 +170,19 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
           InstructionsBannerView.appearance().isHidden = strongSelf.hideInstructionsBannerView
           NextBannerView.appearance().isHidden = strongSelf.hideNextBannerView
           StepInstructionsView.appearance().isHidden = strongSelf.hideStepInstructionsView
-          LanesView.appearance().isHidden = strongSelf.hideLanesView
           
           NavigationSettings.shared.voiceMuted = strongSelf.mute;
 
           vc.delegate = strongSelf
-        
+          
+          if strongSelf.hideLanesView {
+            // Replace the default LanesView with our AlwaysHiddenLanesView
+            let alwaysHiddenLanesView = AlwaysHiddenLanesView(frame: vc.navigationView.lanesView.frame)
+            vc.navigationView.lanesView.removeFromSuperview()
+            vc.navigationView.addSubview(alwaysHiddenLanesView)
+            // If needed, update any references to lanesView in the NavigationViewController
+          }
+          
           parentVC.addChild(vc)
           strongSelf.addSubview(vc.view)
           vc.view.frame = strongSelf.bounds
