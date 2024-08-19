@@ -7,9 +7,18 @@ const MapboxNavigation = (props: IMapboxNavigationProps) => {
   return <RNMapboxNavigation style={styles.container} {...props} />;
 };
 
+const MapboxCarplayNavigation = (props: IMapboxNavigationProps) => {
+  return <RNMapboxCarplayNavigation style={styles.container} {...props} />;
+};
+
 const RNMapboxNavigation = requireNativeComponent(
   'MapboxNavigation',
   MapboxNavigation
+);
+
+const RNMapboxCarplayNavigation = requireNativeComponent(
+  'MapboxCarplayNavigation',
+  MapboxCarplayNavigation
 );
 
 const styles = StyleSheet.create({
@@ -19,3 +28,4 @@ const styles = StyleSheet.create({
 });
 
 export default MapboxNavigation;
+export {MapboxCarplayNavigation}

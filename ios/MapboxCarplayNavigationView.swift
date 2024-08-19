@@ -46,7 +46,7 @@ extension UIColor {
   }
 }
 
-class MapboxNavigationView: UIView, NavigationViewControllerDelegate, NavigationServiceDelegate {
+class MapboxCarplayNavigationView: UIView, CarPlayNavigationViewController, CarPlayNavigationViewControllerDelegate {
   weak var navViewController: NavigationViewController?
   var embedded: Bool
   var embedding: Bool
