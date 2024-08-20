@@ -46,6 +46,15 @@ extension UIColor {
   }
 }
 
+class CustomEmptyView: ContainerViewController {
+    override func loadView() {
+        super.loadView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.heightAnchor.constraint(equalToConstant: 0).isActive = true
+        view.widthAnchor.constraint(equalToConstant: 0).isActive = true
+    }
+}
+
 class MapboxNavigationView: UIView, NavigationViewControllerDelegate, NavigationServiceDelegate {
   weak var navViewController: NavigationViewController?
   var embedded: Bool
@@ -62,16 +71,9 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Navigation
   @objc var mapStyleURL: String = ""
   @objc var viewStyles: NSDictionary = [:]
   
-  @objc var isUsingCarplay: Bool = true
+  @objc var isCarplayView: Bool = true
   @objc var shouldSimulateRoute: Bool = false
   @objc var showsEndOfRouteFeedback: Bool = false
-  @objc var hideStatusView: Bool = false
-  @objc var hideLanesView: Bool = false
-  @objc var hideTopBannerView: Bool = false
-  @objc var hideBottomBannerView: Bool = false
-  @objc var hideInstructionsBannerView: Bool = false
-  @objc var hideNextBannerView: Bool = false
-  @objc var hideStepInstructionsView: Bool = false
 
   @objc var hideReportFeedback: Bool = false
   @objc var mute: Bool = false
@@ -138,9 +140,18 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Navigation
           print("Route response: \(response)")
           print("Route options: \(options)")
           print("Simulate route: \(strongSelf.shouldSimulateRoute)")
+          let bottomBanner = CustomEmptyView();
+          let topBanner = CustomEmptyView();
+
           let navigationService = MapboxNavigationService(routeResponse: response, routeIndex: 0, routeOptions: options, simulating: strongSelf.shouldSimulateRoute ? .always : .never)
           
-          let navigationOptions = NavigationOptions(navigationService: navigationService)
+          let navigationOptions: NavigationOptions
+          if strongSelf.isCarplayView {
+            navigationOptions = NavigationOptions(navigationService: navigationService, topBanner: topBanner, bottomBanner: bottomBanner)
+          } else {
+            navigationOptions = NavigationOptions(navigationService: navigationService)
+          }
+          
           let vc = NavigationViewController(for: response, routeIndex: 0, routeOptions: options, navigationOptions: navigationOptions)
           
           print("MAP URL \(strongSelf.mapStyleURL)")
@@ -150,13 +161,14 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Navigation
           
           vc.showsReportFeedback = !strongSelf.hideReportFeedback
           vc.showsEndOfRouteFeedback = strongSelf.showsEndOfRouteFeedback
-          //vc.hideLanesView = strongSelf.hideLanesView
-          StatusView.appearance().isHidden = strongSelf.hideStatusView
-          TopBannerView.appearance().isHidden = strongSelf.hideTopBannerView
-          BottomBannerView.appearance().isHidden = strongSelf.hideTopBannerView
-          InstructionsBannerView.appearance().isHidden = strongSelf.hideInstructionsBannerView
-          NextBannerView.appearance().isHidden = strongSelf.hideNextBannerView
-          StepInstructionsView.appearance().isHidden = strongSelf.hideStepInstructionsView
+          
+          StatusView.appearance().isHidden = strongSelf.isCarplayView
+          TopBannerView.appearance().isHidden = strongSelf.isCarplayView
+          BottomBannerView.appearance().isHidden = strongSelf.isCarplayView
+          InstructionsBannerView.appearance().isHidden = strongSelf.isCarplayView
+          NextBannerView.appearance().isHidden = strongSelf.isCarplayView
+          StepInstructionsView.appearance().isHidden = strongSelf.isCarplayView
+          FloatingButton.appearance().isHidden = strongSelf.isCarplayView
           NavigationSettings.shared.voiceMuted = strongSelf.mute;
 
           vc.delegate = strongSelf
@@ -217,7 +229,8 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Navigation
   func navigationService(_ service: NavigationService, shouldDiscard location: CLLocation) -> Bool {
       // Default implementation
       print("navigationService:shouldDiscard called")
-      return ((self.navViewController?.navigationService(service, shouldDiscard: location)) != nil)
+      let shouldDiscard = self.navViewController?.navigationService(service, shouldDiscard: location)
+      return shouldDiscard!
   }
 
   func navigationService(_ service: NavigationService, didUpdateAlternatives updatedAlternatives: [Route], removedAlternatives: [Route]) {
@@ -241,9 +254,8 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Navigation
   func navigationService(_ service: NavigationService, shouldRerouteFrom location: CLLocation) -> Bool {
       // Default implementation
       print("navigationService:shouldRerouteFrom called")
-      let shouldReroute = (self.navViewController?.navigationService(service, shouldRerouteFrom: location))!
-      
-      return shouldReroute
+      let shouldReroute = self.navViewController?.navigationService(service, shouldRerouteFrom: location)
+      return shouldReroute!
   }
 
   func navigationService(_ service: NavigationService, willRerouteFrom location: CLLocation?) {
@@ -262,13 +274,12 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Navigation
   func navigationService(_ service: NavigationService, didPassVisualInstructionPoint instruction: VisualInstructionBanner, routeProgress: RouteProgress) {
       print("MapboxNavigationView didPassVisualInstructionPoint")
       
-      if isUsingCarplay {
+      if isCarplayView {
           // skip updating views; this should pass data to RN skope
           // so that Carplay Manager methods can be called to update Carplay UI
       } else {
           self.navViewController?.navigationService(service, didPassVisualInstructionPoint: instruction, routeProgress: routeProgress)
       }
-
   }
         
   private func applyStyles() {

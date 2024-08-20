@@ -22,6 +22,46 @@ declare type OnErrorEvent = {
         message?: string;
     };
 };
+declare type ComponentStyle = {
+    banner: {
+        topBannerBackgroundColor?: string;
+        bottomBannerBackgroundColor?: string;
+        instructionBannerBackgroundColor?: string;
+        stepInstructionsBackgroundColor?: string;
+    };
+    maneuver: {
+        primaryColor?: string;
+        secondaryColor?: string;
+        primaryColorHighlighted?: string;
+        secondaryColorHighlighted?: string;
+    };
+    primary: {
+        normalTextColor?: string;
+    };
+    secondary: {
+        normalTextColor?: string;
+    };
+    distance: {
+        unitTextColor?: string;
+        valueTextColor?: string;
+    };
+    floatingButtons: {
+        tintColor?: string;
+        backgroundColor?: string;
+        borderColor?: string;
+    };
+    timeRemaining: {
+        trafficUnknownColor?: string;
+        trafficLowColor?: string;
+        trafficModerateColor?: string;
+        trafficHeavyColor?: string;
+        trafficSevereColor?: string;
+    };
+    footer: {
+        totalDistanceTextColor?: string;
+        arrivalTimeTextColor?: string;
+    };
+};
 export interface IMapboxNavigationProps {
     origin: Coordinate;
     destination: Coordinate;
@@ -32,13 +72,10 @@ export interface IMapboxNavigationProps {
     onCancelNavigation?: () => void;
     onArrive?: () => void;
     showsEndOfRouteFeedback?: boolean;
-    hideStatusView?: boolean;
-    hideLanesView?: boolean;
-    hideTopBannerView?: boolean;
-    hideBottomBannerView?: boolean;
-    hideInstructionsBannerView?: boolean;
-    hideNextBannerView?: boolean;
-    hideStepInstructionsView?: boolean;
+    hideReportFeedback?: boolean;
+    isCarplayView?: true;
     mute?: boolean;
+    viewStyles?: ComponentStyle;
+    mapStyleURL?: string;
 }
 export {};
