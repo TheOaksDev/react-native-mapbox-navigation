@@ -72,14 +72,8 @@ export interface IMapboxNavigationProps {
     onCancelNavigation?: () => void;
     onArrive?: () => void;
     showsEndOfRouteFeedback?: boolean;
-    hideStatusView?: boolean;
-    hideLanesView?: boolean;
-    hideTopBannerView?: boolean;
-    hideBottomBannerView?: boolean;
-    hideInstructionsBannerView?: boolean;
-    hideNextBannerView?: boolean;
-    hideStepInstructionsView?: boolean;
     hideReportFeedback?: boolean;
+    isCarplayView?: true;
     mute?: boolean;
     viewStyles?: ComponentStyle;
     mapStyleURL?: string;
