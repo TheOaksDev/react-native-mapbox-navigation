@@ -103,7 +103,6 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Navigation
             embed()
             applyStyles()
         } else {
-            // configureSpeedLimitViewPosition()
             navViewController?.view.frame = bounds
         }
     }
@@ -112,25 +111,6 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Navigation
         super.removeFromSuperview()
         // cleanup and teardown any existing resources
         navViewController?.removeFromParent()
-    }
-
-    private func configureSpeedLimitViewPosition() {
-        guard let navigationView = navViewController?.navigationView as? NavigationView else { return }
-
-        let speedLimitView = navigationView.speedLimitView
-        speedLimitView.translatesAutoresizingMaskIntoConstraints = false
-
-        // Create a layout guide for the speed limit view
-        let speedLimitViewLayoutGuide = UILayoutGuide()
-        navigationView.addLayoutGuide(speedLimitViewLayoutGuide)
-
-        // Set the layout guide's constraints to position it in the top right corner
-        NSLayoutConstraint.activate([
-            speedLimitViewLayoutGuide.topAnchor.constraint(equalTo: navigationView.topAnchor, constant: 10),
-            speedLimitViewLayoutGuide.trailingAnchor.constraint(equalTo: navigationView.trailingAnchor, constant: 100),
-            speedLimitViewLayoutGuide.widthAnchor.constraint(equalTo: speedLimitView.widthAnchor),
-            speedLimitViewLayoutGuide.heightAnchor.constraint(equalTo: speedLimitView.heightAnchor),
-        ])
     }
 
     private func embed() {
@@ -171,6 +151,10 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Navigation
                 vc.showsReportFeedback = !strongSelf.hideReportFeedback
                 vc.showsEndOfRouteFeedback = strongSelf.showsEndOfRouteFeedback
 
+                if strongSelf.isCarplayView {
+                    vc.floatingButtonsPosition = .topTrailing
+                }
+                
                 StatusView.appearance().isHidden = strongSelf.isCarplayView
                 TopBannerView.appearance().isHidden = strongSelf.isCarplayView
                 BottomBannerView.appearance().isHidden = strongSelf.isCarplayView

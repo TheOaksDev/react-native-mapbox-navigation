@@ -96,10 +96,13 @@ repositories {
 dependencies {
     //noinspection GradleDynamicVersion
     implementation 'com.facebook.react:react-native:+'  // From node_modules
-    implementation "com.mapbox.navigation:android:2.1.1"
+    implementation "com.mapbox.navigation:android:2.20.2"
+    implementation "com.mapbox.navigation:ui-dropin:2.20.2"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.work:work-runtime:2.8.0'
+    implementation 'androidx.work:work-runtime-ktx:2.8.0'
 }
 
 def configureReactNativePom(def pom) {
