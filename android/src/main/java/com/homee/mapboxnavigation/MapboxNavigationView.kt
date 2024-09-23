@@ -709,8 +709,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         val tripProgressViewOptions = TripProgressViewOptions.Builder()
         if (isDarkMode) {
             tripProgressViewOptions.backgroundColor(R.color.DarkBackgroundColor)
+            tripProgressViewOptions.distanceRemainingIconTint(R.color.DarkColorStateList)
         } else {
             tripProgressViewOptions.backgroundColor(R.color.LightBackgroundColor)
+            tripProgressViewOptions.distanceRemainingIconTint(R.color.LightColorStateList)
         }
         binding.tripProgressView.updateOptions(tripProgressViewOptions.build())
     }

@@ -1,6 +1,6 @@
 <resources>
-    <color name="LightManeuverBackgroundColor">#F8F9FA</color>
-    <color name="DarkManeuverBackgroundColor">#242424</color>
-    <color name="LightSubManeuverBackgroundColor">#E9ECEF</color>
-    <color name="DarkSubManeuverBackgroundColor">#333333</color>
+    <color name="LightBackgroundColor">#F8F9FA</color>
+    <color name="DarkBackgroundColor">#242424</color>
+    <color name="LightBackgroundColor2dp">#E9ECEF</color>
+    <color name="DarkBackgroundColor2dp">#333333</color>
 </resources>
