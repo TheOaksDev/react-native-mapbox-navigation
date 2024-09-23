@@ -1,0 +1,4 @@
+<resources>
+    <color name="LightManeuverBackgroundColor">#F8F9FA</color>
+    <color name="DarkManeuverBackgroundColor">#242424</color>
+</resources>

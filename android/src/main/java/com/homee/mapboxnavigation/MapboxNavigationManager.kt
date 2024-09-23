@@ -3,13 +3,15 @@ package com.homee.mapboxnavigation
 import android.content.pm.PackageManager
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableArray
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.common.MapBuilder
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
+import com.mapbox.common.MapboxOptions
 import com.mapbox.geojson.Point
-import com.mapbox.maps.ResourceOptionsManager
 import com.mapbox.maps.TileStoreUsageMode
+import com.mapbox.maps.mapsOptions
 import javax.annotation.Nonnull
 
 class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : SimpleViewManager<MapboxNavigationView>() {
@@ -22,9 +24,8 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
                 val bundle = app.metaData
                 val accessToken = bundle.getString("MAPBOX_ACCESS_TOKEN")
                 this.accessToken = accessToken
-                ResourceOptionsManager.getDefault(mCallerContext, accessToken).update {
-                    tileStoreUsageMode(TileStoreUsageMode.READ_ONLY)
-                }
+                MapboxOptions.accessToken = this.accessToken.toString()
+                MapboxOptions.mapsOptions.tileStoreUsageMode = TileStoreUsageMode.READ_ONLY
             } catch (e: PackageManager.NameNotFoundException) {
                 e.printStackTrace()
             }
@@ -85,5 +86,25 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
     @ReactProp(name = "mute")
     fun setMute(view: MapboxNavigationView, mute: Boolean) {
         view.setMute(mute)
+    }
+
+    @ReactProp(name = "viewStyles")
+    fun setViewStyles(view: MapboxNavigationView, viewStyles: ReadableMap) {
+        view.setViewStyles(viewStyles)
+    }
+
+    @ReactProp(name = "isCarplayView")
+    fun setIsCarplayView(view: MapboxNavigationView, isCarplayView: Boolean) {
+        view.setIsCarplayView(isCarplayView)
+    }
+
+    @ReactProp(name = "mapStyleURL")
+    fun setMapStyleURL(view: MapboxNavigationView, mapStyleURL: String) {
+        view.setMapStyleURL(mapStyleURL)
+    }
+
+    @ReactProp(name = "isDarkMode")
+    fun setIsDarkMode(view: MapboxNavigationView, isDarkMode: Boolean) {
+        view.setIsDarkMode(isDarkMode)
     }
 }

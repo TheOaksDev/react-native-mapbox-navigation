@@ -3,6 +3,7 @@ package com.homee.mapboxnavigation
 import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.content.res.Resources
+import android.graphics.Color
 //import android.location.Location
 import android.location.LocationManager
 import android.util.Log
@@ -12,6 +13,7 @@ import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.ThemedReactContext
 import com.mapbox.api.directions.v5.models.DirectionsRoute
 import com.mapbox.api.directions.v5.models.RouteOptions
@@ -91,6 +93,9 @@ import com.mapbox.maps.extension.style.layers.getLayer
 import com.mapbox.maps.plugin.locationcomponent.LocationComponentConstants
 import com.mapbox.navigation.base.route.NavigationRoute
 import com.mapbox.navigation.base.route.NavigationRouterCallback
+import com.mapbox.navigation.ui.components.maneuver.model.ManeuverPrimaryOptions
+import com.mapbox.navigation.ui.components.maneuver.model.ManeuverSecondaryOptions
+import com.mapbox.navigation.ui.components.maneuver.model.ManeuverSubOptions
 import com.mapbox.navigation.ui.components.maneuver.model.ManeuverViewOptions
 import com.mapbox.navigation.ui.maps.route.RouteLayerConstants
 
@@ -105,6 +110,13 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     private var destination: Point? = null
     private var shouldSimulateRoute = false
     private var showsEndOfRouteFeedback = false
+    private var hideReportFeedback = false
+    private var mute = false
+    private var mapStyleURL = ""
+    private var viewStyles: ReadableMap? = null
+    private var isCarplayView = false
+    private var isDarkMode = false
+
     /**
      * Debug tool used to play, pause and seek route progress events that can be used to produce mocked location updates along the route.
      */
@@ -573,6 +585,9 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
             initLocationPuckComponent()
 
+            Log.d("MapboxNavigationStyles", "View styles: $viewStyles")
+            updateStyles()
+
         }
 
         // initialize view interactions
@@ -637,6 +652,118 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             enabled = true
             // Use slot-based positioning
             slot = "top" // Positions the puck above POI labels and behind Place labels
+        }
+    }
+
+    /**
+     * Method to set maneuver view options based on viewStyles from React Native
+     */
+    private fun updateStyles() {
+        // Handle Banner Styles
+        // if (styles.hasKey("banner")) {
+        //     val bannerStyles = styles.getMap("banner")
+        //     bannerStyles?.let {
+        //         setBannerStyles(it)
+        //     }
+        // }
+
+        // Handle Maneuver Styles
+        setManeuverStyles()
+
+        // Handle Primary Text Styles
+        // if (styles.hasKey("primary")) {
+        //     val primaryStyles = styles.getMap("primary")
+        //     primaryStyles?.let {
+        //         setPrimaryTextStyles(it)
+        //     }
+        // }
+
+        // Handle Secondary Text Styles
+        // if (styles.hasKey("secondary")) {
+        //     val secondaryStyles = styles.getMap("secondary")
+        //     secondaryStyles?.let {
+        //         setSecondaryTextStyles(it)
+        //     }
+        // }
+
+        // Continue similarly for other style categories...
+    }
+
+    private fun setBannerStyles(styles: ReadableMap) {
+//        if (styles.hasKey("topBannerBackgroundColor")) {
+//            val color = parseColor(styles.getString("topBannerBackgroundColor"))
+//            binding.topBannerView.setBackgroundColor(color)
+//        }
+//        if (styles.hasKey("bottomBannerBackgroundColor")) {
+//            val color = parseColor(styles.getString("bottomBannerBackgroundColor"))
+//            binding.bottomBannerView.setBackgroundColor(color)
+//        }
+        // Handle other banner-related styles...
+    }
+
+    private fun setManeuverStyles() {
+        val maneuverViewOptions = ManeuverViewOptions.Builder()
+        if (isDarkMode) {
+            maneuverViewOptions.primaryManeuverOptions(
+                    ManeuverPrimaryOptions.Builder()
+                            .textAppearance(R.style.DarkPrimaryManeuverTextAppearance)
+                            .build()
+            ).secondaryManeuverOptions(
+                    ManeuverSecondaryOptions.Builder()
+                            .textAppearance(R.style.DarkSecondaryManeuverTextAppearance)
+                            .build()
+            ).subManeuverOptions(
+                    ManeuverSubOptions.Builder()
+                            .textAppearance(R.style.DarkSecondaryManeuverTextAppearance)
+                            .build()
+            )
+            .upcomingManeuverBackgroundColor(R.color.DarkManeuverBackgroundColor)
+            .maneuverBackgroundColor(R.color.DarkManeuverBackgroundColor)
+            .subManeuverBackgroundColor(R.color.DarkManeuverBackgroundColor)
+        } else {
+            maneuverViewOptions.primaryManeuverOptions(
+                    ManeuverPrimaryOptions.Builder()
+                            .textAppearance(R.style.LightPrimaryManeuverTextAppearance)
+                            .build()
+            ).secondaryManeuverOptions(
+                    ManeuverSecondaryOptions.Builder()
+                            .textAppearance(R.style.LightSecondaryManeuverTextAppearance)
+                            .build()
+            ).subManeuverOptions(
+                    ManeuverSubOptions.Builder()
+                            .textAppearance(R.style.LightSecondaryManeuverTextAppearance)
+                            .build()
+            )
+            .upcomingManeuverBackgroundColor(R.color.LightManeuverBackgroundColor)
+            .maneuverBackgroundColor(R.color.LightManeuverBackgroundColor)
+            .subManeuverBackgroundColor(R.color.LightManeuverBackgroundColor)
+        }
+
+        binding.maneuverView.updateManeuverViewOptions(maneuverViewOptions.build())
+    }
+
+    private fun setPrimaryTextStyles(styles: ReadableMap) {
+//        if (styles.hasKey("normalTextColor")) {
+//            val color = parseColor(styles.getString("normalTextColor"))
+//            binding.primaryTextView.setTextColor(color)
+//        }
+        // Handle other primary text styles...
+    }
+
+    private fun setSecondaryTextStyles(styles: ReadableMap) {
+//        if (styles.hasKey("normalTextColor")) {
+//            val color = parseColor(styles.getString("normalTextColor"))
+//            binding.secondaryTextView.setTextColor(color)
+//        }
+        // Handle other secondary text styles...
+    }
+
+    private fun parseColor(colorStr: String?): Int {
+        return try {
+            Color.parseColor(colorStr)
+        } catch (e: IllegalArgumentException) {
+            Log.e("MapboxNavigationView", "Invalid color string: $colorStr. Using default color.")
+            Color.WHITE
         }
     }
 
@@ -782,5 +909,21 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
     fun setMute(mute: Boolean) {
         this.isVoiceInstructionsMuted = mute
+    }
+
+    fun setViewStyles(viewStyles: ReadableMap) {
+        this.viewStyles = viewStyles
+    }
+
+    fun setIsCarplayView(isCarplayView: Boolean) {
+        this.isCarplayView = isCarplayView
+    }
+
+    fun setMapStyleURL(mapStyleURL: String) {
+        this.mapStyleURL = mapStyleURL
+    }
+
+    fun setIsDarkMode(isDarkMode: Boolean) {
+        this.isDarkMode = isDarkMode
     }
 }
