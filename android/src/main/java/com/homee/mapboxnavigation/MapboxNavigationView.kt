@@ -719,7 +719,9 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             )
             .upcomingManeuverBackgroundColor(R.color.DarkManeuverBackgroundColor)
             .maneuverBackgroundColor(R.color.DarkManeuverBackgroundColor)
-            .subManeuverBackgroundColor(R.color.DarkManeuverBackgroundColor)
+            .subManeuverBackgroundColor(R.color.DarkSubManeuverBackgroundColor)
+            .stepDistanceTextAppearance(R.style.DarkStepDistanceRemainingAppearance)
+            .maneuverViewIconStyle(R.style.DarkManeuverViewIconAppearance)
         } else {
             maneuverViewOptions.primaryManeuverOptions(
                     ManeuverPrimaryOptions.Builder()
@@ -736,7 +738,9 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             )
             .upcomingManeuverBackgroundColor(R.color.LightManeuverBackgroundColor)
             .maneuverBackgroundColor(R.color.LightManeuverBackgroundColor)
-            .subManeuverBackgroundColor(R.color.LightManeuverBackgroundColor)
+            .subManeuverBackgroundColor(R.color.LightSubManeuverBackgroundColor)
+            .stepDistanceTextAppearance(R.style.LightStepDistanceRemainingAppearance)
+            .maneuverViewIconStyle(R.style.LightManeuverViewIconAppearance)
         }
 
         binding.maneuverView.updateManeuverViewOptions(maneuverViewOptions.build())
