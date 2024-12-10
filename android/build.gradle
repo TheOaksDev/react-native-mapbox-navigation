@@ -80,6 +80,7 @@ android {
 
 repositories {
     // ref: https://www.baeldung.com/maven-local-repository
+    mavenCentral()
     mavenLocal()
     maven {
         // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
@@ -88,6 +89,9 @@ repositories {
     maven {
         // Android JSC is installed from npm
         url "$rootDir/../node_modules/jsc-android/dist"
+    }
+    maven {
+        url 'https://api.mapbox.com/downloads/v2/releases/maven'
     }
     google()
     jcenter()
@@ -99,6 +103,7 @@ dependencies {
 
     implementation "com.mapbox.navigationcore:android:3.4.0-beta.1"
     implementation "com.mapbox.navigationcore:ui-components:3.4.0-beta.1"
+    //implementation 'com.mapbox.navigationcore:android-auto-components:3.4.0-beta.1'
 
     //implementation "com.mapbox.navigation:android:2.20.2"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"

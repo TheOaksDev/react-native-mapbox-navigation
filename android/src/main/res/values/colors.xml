@@ -3,4 +3,8 @@
     <color name="DarkBackgroundColor">#242424</color>
     <color name="LightBackgroundColor2dp">#E9ECEF</color>
     <color name="DarkBackgroundColor2dp">#333333</color>
+    <color name="LightBackgroundColor5dp">#6C757D</color>
+    <color name="DarkBackgroundColor5dp">#4E545A</color>
+    <color name="DarkTextColor">#ffffff</color>
+    <color name="LightTextColor">#4a4a4a</color>
 </resources>

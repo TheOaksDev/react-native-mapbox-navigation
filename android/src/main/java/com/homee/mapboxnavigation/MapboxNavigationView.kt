@@ -1,60 +1,76 @@
 package com.homee.mapboxnavigation
 
+//import android.location.Location
+//import com.mapbox.navigation.base.route.RouterCallback
+//import com.mapbox.navigation.core.replay.ReplayLocationEngine
+
 import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.Color
-//import android.location.Location
-import android.location.LocationManager
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.ThemedReactContext
-import com.mapbox.api.directions.v5.models.DirectionsRoute
+import com.facebook.react.uimanager.events.RCTEventEmitter
+import com.homee.mapboxnavigation.databinding.NavigationViewBinding
+import com.mapbox.api.directions.v5.DirectionsCriteria
 import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.bindgen.Expected
+import com.mapbox.common.location.Location
 import com.mapbox.geojson.Point
 import com.mapbox.maps.EdgeInsets
+import com.mapbox.maps.ImageHolder
 import com.mapbox.maps.MapView
 import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.Style
 import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.animation.camera
+import com.mapbox.maps.plugin.locationcomponent.LocationComponentConstants
 import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.navigation.base.TimeFormat
 import com.mapbox.navigation.base.extensions.applyDefaultNavigationOptions
 import com.mapbox.navigation.base.extensions.applyLanguageAndVoiceUnitOptions
 import com.mapbox.navigation.base.options.NavigationOptions
-//import com.mapbox.navigation.base.route.RouterCallback
+import com.mapbox.navigation.base.route.NavigationRoute
+import com.mapbox.navigation.base.route.NavigationRouterCallback
 import com.mapbox.navigation.base.route.RouterFailure
-import com.mapbox.navigation.base.route.RouterOrigin
+import com.mapbox.navigation.base.trip.model.RouteLegProgress
+import com.mapbox.navigation.base.trip.model.RouteProgress
 import com.mapbox.navigation.core.MapboxNavigation
 import com.mapbox.navigation.core.MapboxNavigationProvider
+import com.mapbox.navigation.core.arrival.ArrivalObserver
 import com.mapbox.navigation.core.directions.session.RoutesObserver
+import com.mapbox.navigation.core.directions.session.RoutesUpdatedResult
 import com.mapbox.navigation.core.formatter.MapboxDistanceFormatter
 import com.mapbox.navigation.core.replay.MapboxReplayer
-//import com.mapbox.navigation.core.replay.ReplayLocationEngine
 import com.mapbox.navigation.core.replay.route.ReplayProgressObserver
 import com.mapbox.navigation.core.replay.route.ReplayRouteMapper
 import com.mapbox.navigation.core.trip.session.LocationMatcherResult
 import com.mapbox.navigation.core.trip.session.LocationObserver
 import com.mapbox.navigation.core.trip.session.RouteProgressObserver
 import com.mapbox.navigation.core.trip.session.VoiceInstructionsObserver
-import com.homee.mapboxnavigation.databinding.NavigationViewBinding
-import com.mapbox.api.directions.v5.DirectionsCriteria
-import com.mapbox.navigation.base.trip.model.RouteLegProgress
-import com.mapbox.navigation.base.trip.model.RouteProgress
-import com.mapbox.navigation.core.arrival.ArrivalObserver
-import com.mapbox.navigation.ui.base.util.MapboxNavigationConsumer
-
 import com.mapbox.navigation.tripdata.maneuver.api.MapboxManeuverApi
+import com.mapbox.navigation.tripdata.progress.api.MapboxTripProgressApi
+import com.mapbox.navigation.tripdata.progress.model.DistanceRemainingFormatter
+import com.mapbox.navigation.tripdata.progress.model.EstimatedTimeToArrivalFormatter
+import com.mapbox.navigation.tripdata.progress.model.PercentDistanceTraveledFormatter
+import com.mapbox.navigation.tripdata.progress.model.TimeRemainingFormatter
+import com.mapbox.navigation.tripdata.progress.model.TripProgressUpdateFormatter
+import com.mapbox.navigation.ui.base.util.MapboxNavigationConsumer
+import com.mapbox.navigation.ui.components.maneuver.model.ManeuverPrimaryOptions
+import com.mapbox.navigation.ui.components.maneuver.model.ManeuverSecondaryOptions
+import com.mapbox.navigation.ui.components.maneuver.model.ManeuverSubOptions
+import com.mapbox.navigation.ui.components.maneuver.model.ManeuverViewOptions
 import com.mapbox.navigation.ui.components.maneuver.view.MapboxManeuverView
-
+import com.mapbox.navigation.ui.components.tripprogress.model.TripProgressViewOptions
+import com.mapbox.navigation.ui.components.tripprogress.view.MapboxTripProgressView
 import com.mapbox.navigation.ui.maps.camera.NavigationCamera
 import com.mapbox.navigation.ui.maps.camera.data.MapboxNavigationViewportDataSource
 import com.mapbox.navigation.ui.maps.camera.lifecycle.NavigationBasicGesturesHandler
@@ -66,42 +82,69 @@ import com.mapbox.navigation.ui.maps.route.arrow.api.MapboxRouteArrowView
 import com.mapbox.navigation.ui.maps.route.arrow.model.RouteArrowOptions
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
-import com.mapbox.navigation.ui.maps.route.line.model.NavigationRouteLine
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineApiOptions
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineViewOptions
-import com.mapbox.navigation.tripdata.progress.api.MapboxTripProgressApi
-import com.mapbox.navigation.tripdata.progress.model.DistanceRemainingFormatter
-import com.mapbox.navigation.tripdata.progress.model.EstimatedTimeToArrivalFormatter
-import com.mapbox.navigation.tripdata.progress.model.PercentDistanceTraveledFormatter
-import com.mapbox.navigation.tripdata.progress.model.TimeRemainingFormatter
-import com.mapbox.navigation.tripdata.progress.model.TripProgressUpdateFormatter
-import com.mapbox.navigation.ui.components.tripprogress.view.MapboxTripProgressView
-
+import com.mapbox.navigation.ui.maps.route.line.model.NavigationRouteLine
 import com.mapbox.navigation.voice.api.MapboxSpeechApi
 import com.mapbox.navigation.voice.api.MapboxVoiceInstructionsPlayer
 import com.mapbox.navigation.voice.model.SpeechAnnouncement
 import com.mapbox.navigation.voice.model.SpeechError
 import com.mapbox.navigation.voice.model.SpeechValue
 import com.mapbox.navigation.voice.model.SpeechVolume
-
 import java.util.Locale
-import com.facebook.react.uimanager.events.RCTEventEmitter
-import com.mapbox.navigation.core.directions.session.RoutesUpdatedResult
-import com.mapbox.common.location.Location
-import com.mapbox.maps.ImageHolder
-import com.mapbox.maps.extension.style.layers.getLayer
-import com.mapbox.maps.plugin.locationcomponent.LocationComponentConstants
-import com.mapbox.navigation.base.route.NavigationRoute
-import com.mapbox.navigation.base.route.NavigationRouterCallback
-import com.mapbox.navigation.ui.components.maneuver.model.ManeuverPrimaryOptions
-import com.mapbox.navigation.ui.components.maneuver.model.ManeuverSecondaryOptions
-import com.mapbox.navigation.ui.components.maneuver.model.ManeuverSubOptions
-import com.mapbox.navigation.ui.components.maneuver.model.ManeuverViewOptions
-import com.mapbox.navigation.ui.components.tripprogress.model.TripProgressViewOptions
-import com.mapbox.navigation.ui.maps.route.RouteLayerConstants
 
-class MapboxNavigationView(private val context: ThemedReactContext, private val accessToken: String?) :
-        FrameLayout(context.baseContext) {
+import android.content.Context
+import android.util.AttributeSet
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.ViewTreeLifecycleOwner
+
+class MapboxNavigationView(private val context: ThemedReactContext, private val accessToken: String?) : FrameLayout(context.baseContext), LifecycleOwner {
+
+    private val lifecycleRegistry: LifecycleRegistry by lazy { LifecycleRegistry(this) }
+
+    init {
+        // Initialize your view here
+        ViewTreeLifecycleOwner.set(this, this)
+    }
+
+    override fun getLifecycle(): Lifecycle {
+        return lifecycleRegistry
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        lifecycleRegistry.currentState = Lifecycle.State.STARTED
+        // Additional setup when the view is attached
+
+        onCreate()
+    }
+
+    override fun onDetachedFromWindow() {
+        lifecycleRegistry.currentState = Lifecycle.State.CREATED
+        // Additional cleanup when the view is detached
+        super.onDetachedFromWindow()
+
+        mapboxNavigation.unregisterRoutesObserver(routesObserver)
+        mapboxNavigation.unregisterRouteProgressObserver(routeProgressObserver)
+        mapboxNavigation.unregisterLocationObserver(locationObserver)
+        mapboxNavigation.unregisterVoiceInstructionsObserver(voiceInstructionsObserver)
+        mapboxNavigation.unregisterRouteProgressObserver(replayProgressObserver)
+    }
+
+    private fun onDestroy() {
+        lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
+        // Cleanup resources
+
+        MapboxNavigationProvider.destroy()
+        mapboxReplayer.finish()
+        maneuverApi.cancel()
+        routeLineApi.cancel()
+        routeLineView.cancel()
+        speechApi.cancel()
+        voiceInstructionsPlayer.shutdown()
+    }
 
     private companion object {
         private const val BUTTON_ANIMATION_DURATION = 1500L
@@ -454,10 +497,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
     }
 
 
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
-        onCreate()
-    }
+    // override fun onAttachedToWindow() {
+    //     super.onAttachedToWindow()
+    //     onCreate()
+    // }
 
     override fun requestLayout() {
         super.requestLayout()
@@ -674,6 +717,9 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         // Handle Trip Progress Card Styles
         setTripProgressStyles()
 
+        // Handle Action Button Styles
+        setActionButtonStyles()
+
         // Handle Primary Text Styles
         // if (styles.hasKey("primary")) {
         //     val primaryStyles = styles.getMap("primary")
@@ -705,14 +751,55 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         // Handle other banner-related styles...
     }
 
+    private fun setActionButtonStyles() {
+
+        if (isDarkMode) {
+            val roundedButtonDrawable = ContextCompat.getDrawable(context, R.drawable.rounded_button_dark)
+
+            binding.stop.setImageDrawable(AppCompatResources.getDrawable(context, R.drawable.cancel_dark))
+            binding.recenter.updateStyle(R.style.DarkActionButtonAppearance)
+            binding.soundButton.updateStyle(R.style.DarkActionButtonAppearance)
+            binding.soundButton.unmute()
+            binding.routeOverview.updateStyle(R.style.DarkActionButtonAppearance)
+
+            // Apply the rounded button drawable
+            binding.recenter.background = roundedButtonDrawable
+            binding.soundButton.background = roundedButtonDrawable
+            binding.routeOverview.background = roundedButtonDrawable
+        } else {
+            val roundedButtonDrawable = ContextCompat.getDrawable(context, R.drawable.rounded_button_light)
+
+            binding.stop.setImageDrawable(AppCompatResources.getDrawable(context, R.drawable.cancel_light))
+            binding.recenter.updateStyle(R.style.LightActionButtonAppearance)
+            binding.soundButton.updateStyle(R.style.LightActionButtonAppearance)
+            binding.soundButton.unmute()
+            binding.routeOverview.updateStyle(R.style.LightActionButtonAppearance)
+
+            // Apply the rounded button drawable
+            binding.recenter.background = roundedButtonDrawable
+            binding.soundButton.background = roundedButtonDrawable
+            binding.routeOverview.background = roundedButtonDrawable
+        }
+    }
+
     private fun setTripProgressStyles() {
         val tripProgressViewOptions = TripProgressViewOptions.Builder()
         if (isDarkMode) {
             tripProgressViewOptions.backgroundColor(R.color.DarkBackgroundColor)
-            tripProgressViewOptions.distanceRemainingIconTint(R.color.DarkColorStateList)
+            val darkColorStateList = ContextCompat.getColorStateList(context, R.color.LightBackgroundColor5dp)
+            tripProgressViewOptions.distanceRemainingIconTint(darkColorStateList)
+            tripProgressViewOptions.estimatedArrivalTimeIconTint(darkColorStateList)
+            tripProgressViewOptions.distanceRemainingTextAppearance(R.style.DarkProgressViewTextAppearance)
+            tripProgressViewOptions.estimatedArrivalTimeTextAppearance(R.style.DarkProgressViewTextAppearance)
+            tripProgressViewOptions.timeRemainingTextAppearance(R.style.DarkProgressViewTextAppearance)
         } else {
             tripProgressViewOptions.backgroundColor(R.color.LightBackgroundColor)
-            tripProgressViewOptions.distanceRemainingIconTint(R.color.LightColorStateList)
+            val lightColorStateList = ContextCompat.getColorStateList(context, R.color.DarkBackgroundColor5dp)
+            tripProgressViewOptions.distanceRemainingIconTint(lightColorStateList)
+            tripProgressViewOptions.estimatedArrivalTimeIconTint(lightColorStateList)
+            tripProgressViewOptions.distanceRemainingTextAppearance(R.style.LightProgressViewTextAppearance)
+            tripProgressViewOptions.estimatedArrivalTimeTextAppearance(R.style.LightProgressViewTextAppearance)
+            tripProgressViewOptions.timeRemainingTextAppearance(R.style.LightProgressViewTextAppearance)
         }
         binding.tripProgressView.updateOptions(tripProgressViewOptions.build())
     }
@@ -801,24 +888,24 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         this.origin?.let { this.destination?.let { it1 -> this.findRoute(it, it1) } }
     }
 
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        mapboxNavigation.unregisterRoutesObserver(routesObserver)
-        mapboxNavigation.unregisterRouteProgressObserver(routeProgressObserver)
-        mapboxNavigation.unregisterLocationObserver(locationObserver)
-        mapboxNavigation.unregisterVoiceInstructionsObserver(voiceInstructionsObserver)
-        mapboxNavigation.unregisterRouteProgressObserver(replayProgressObserver)
-    }
+    // override fun onDetachedFromWindow() {
+    //     super.onDetachedFromWindow()
+    //     mapboxNavigation.unregisterRoutesObserver(routesObserver)
+    //     mapboxNavigation.unregisterRouteProgressObserver(routeProgressObserver)
+    //     mapboxNavigation.unregisterLocationObserver(locationObserver)
+    //     mapboxNavigation.unregisterVoiceInstructionsObserver(voiceInstructionsObserver)
+    //     mapboxNavigation.unregisterRouteProgressObserver(replayProgressObserver)
+    // }
 
-    private fun onDestroy() {
-        MapboxNavigationProvider.destroy()
-        mapboxReplayer.finish()
-        maneuverApi.cancel()
-        routeLineApi.cancel()
-        routeLineView.cancel()
-        speechApi.cancel()
-        voiceInstructionsPlayer.shutdown()
-    }
+    // private fun onDestroy() {
+    //     MapboxNavigationProvider.destroy()
+    //     mapboxReplayer.finish()
+    //     maneuverApi.cancel()
+    //     routeLineApi.cancel()
+    //     routeLineView.cancel()
+    //     speechApi.cancel()
+    //     voiceInstructionsPlayer.shutdown()
+    // }
 
     private fun findRoute(origin: Point, destination: Point) {
         try {
@@ -875,10 +962,17 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             startSimulation(routes.first())
         }
 
-        // show UI elements
-        binding.soundButton.visibility = View.VISIBLE
-        binding.routeOverview.visibility = View.VISIBLE
-        binding.tripProgressCard.visibility = View.VISIBLE
+        if (isCarplayView) {
+            // hide UI elements
+            binding.soundButton.visibility = View.INVISIBLE
+            binding.routeOverview.visibility = View.INVISIBLE
+            binding.tripProgressCard.visibility = View.VISIBLE
+        } else {
+            // show UI elements
+            binding.soundButton.visibility = View.VISIBLE
+            binding.routeOverview.visibility = View.VISIBLE
+            binding.tripProgressCard.visibility = View.VISIBLE
+        }
 
         // move the camera to overview when new route is available
         navigationCamera.requestNavigationCameraToFollowing()
