@@ -4,6 +4,7 @@ import android.content.pm.PackageManager
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.common.MapBuilder
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
@@ -34,6 +35,18 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
 
     override fun getName(): String {
         return "MapboxNavigation"
+    }
+
+    override fun getCommandsMap(): Map<String, Int> {
+        return mapOf(
+            "stopNavigation" to 1
+        )
+    }
+
+    override fun receiveCommand(view: MapboxNavigationView, commandId: Int, args: ReadableArray?) {
+        when (commandId) {
+            1 -> view.stopNavigation()
+        }
     }
 
     public override fun createViewInstance(@Nonnull reactContext: ThemedReactContext): MapboxNavigationView {

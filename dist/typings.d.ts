@@ -1,14 +1,14 @@
 /** @type {[number, number]}
  * Provide an array with longitude and latitude [$longitude, $latitude]
  */
-type Coordinate = [number, number];
-type OnLocationChangeEvent = {
+declare type Coordinate = [number, number];
+declare type OnLocationChangeEvent = {
     nativeEvent?: {
         latitude: number;
         longitude: number;
     };
 };
-type OnRouteProgressChangeEvent = {
+declare type OnRouteProgressChangeEvent = {
     nativeEvent?: {
         distanceTraveled: number;
         durationRemaining: number;
@@ -17,12 +17,12 @@ type OnRouteProgressChangeEvent = {
         route: object;
     };
 };
-type OnErrorEvent = {
+declare type OnErrorEvent = {
     nativeEvent?: {
         message?: string;
     };
 };
-type ComponentStyle = {
+declare type ComponentStyle = {
     banner: {
         topBannerBackgroundColor?: string;
         bottomBannerBackgroundColor?: string;

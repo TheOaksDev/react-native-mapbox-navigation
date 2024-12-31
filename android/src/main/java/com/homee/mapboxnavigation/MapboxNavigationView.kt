@@ -146,6 +146,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         voiceInstructionsPlayer.shutdown()
     }
 
+    public fun stopNavigation() {
+        onDestroy()
+    }
+
     private companion object {
         private const val BUTTON_ANIMATION_DURATION = 1500L
     }
@@ -408,10 +412,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                 },
                 {
                     binding.maneuverView.visibility = View.VISIBLE
-//                binding.maneuverView.updatePrimaryManeuverTextVisibility(R.style.PrimaryManeuverTextAppearance.)
-//                binding.maneuverView.updateSecondaryManeuverVisibility(R.style.ManeuverTextAppearance)
-//                binding.maneuverView.updateSubManeuverViewVisibility(R.style.ManeuverTextAppearance)
-//                binding.maneuverView.updateStepDistanceTextAppearance(R.style.StepDistanceRemainingAppearance)
+                    // binding.maneuverView.updatePrimaryManeuverTextVisibility(R.style.PrimaryManeuverTextAppearance.)
+                    // binding.maneuverView.updateSecondaryManeuverVisibility(R.style.ManeuverTextAppearance)
+                    // binding.maneuverView.updateSubManeuverViewVisibility(R.style.ManeuverTextAppearance)
+                    // binding.maneuverView.updateStepDistanceTextAppearance(R.style.StepDistanceRemainingAppearance)
                     binding.maneuverView.renderManeuvers(maneuvers)
                 }
         )
@@ -426,6 +430,10 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         event.putDouble("durationRemaining", routeProgress.durationRemaining.toDouble())
         event.putDouble("fractionTraveled", routeProgress.fractionTraveled.toDouble())
         event.putDouble("distanceRemaining", routeProgress.distanceRemaining.toDouble())
+        routeProgress.currentLegProgress?.legIndex?.toDouble()?.let { event.putDouble("legIndex", it) }
+        routeProgress.currentLegProgress?.currentStepProgress?.stepIndex?.toDouble()?.let { event.putDouble("currentStepIndex", it) }
+        routeProgress.currentLegProgress?.currentStepProgress?.distanceRemaining?.toDouble()?.let { event.putDouble("currentStepProgress", it) }
+        event.putString("route", routeProgress.route?.toJson().toString())
         context
                 .getJSModule(RCTEventEmitter::class.java)
                 .receiveEvent(id, "onRouteProgressChange", event)
@@ -573,14 +581,19 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
             }
         }
         // set the padding values depending on screen orientation and visible view layout
+
         if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            Log.d("MapboxNavigationStyles", "Landscape Overview Padding")
             viewportDataSource.overviewPadding = landscapeOverviewPadding
         } else {
+            Log.d("MapboxNavigationStyles", "Portrait Overview Padding")
             viewportDataSource.overviewPadding = overviewPadding
         }
         if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            Log.d("MapboxNavigationStyles", "Landscape Following Padding")
             viewportDataSource.followingPadding = landscapeFollowingPadding
         } else {
+            Log.d("MapboxNavigationStyles", "Portrait Following Padding")
             viewportDataSource.followingPadding = followingPadding
         }
 
@@ -636,7 +649,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
         // initialize view interactions
         binding.stop.setOnClickListener {
-//            clearRouteAndStopNavigation() // TODO: figure out how we want to address this since a user cannot reinitialize a route once it is canceled.
+            //clearRouteAndStopNavigation() // TODO: figure out how we want to address this since a user cannot reinitialize a route once it is canceled.
             val event = Arguments.createMap()
             event.putString("onCancelNavigation", "Navigation Closed")
             context
@@ -718,7 +731,7 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
         setTripProgressStyles()
 
         // Handle Action Button Styles
-        setActionButtonStyles()
+        //setActionButtonStyles()
 
         // Handle Primary Text Styles
         // if (styles.hasKey("primary")) {
