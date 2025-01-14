@@ -411,12 +411,14 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
                     ).show()
                 },
                 {
-                    binding.maneuverView.visibility = View.VISIBLE
-                    // binding.maneuverView.updatePrimaryManeuverTextVisibility(R.style.PrimaryManeuverTextAppearance.)
-                    // binding.maneuverView.updateSecondaryManeuverVisibility(R.style.ManeuverTextAppearance)
-                    // binding.maneuverView.updateSubManeuverViewVisibility(R.style.ManeuverTextAppearance)
-                    // binding.maneuverView.updateStepDistanceTextAppearance(R.style.StepDistanceRemainingAppearance)
-                    binding.maneuverView.renderManeuvers(maneuvers)
+                    if (!isCarplayView) {
+                        binding.maneuverView.visibility = View.VISIBLE
+                        // binding.maneuverView.updatePrimaryManeuverTextVisibility(R.style.PrimaryManeuverTextAppearance.)
+                        // binding.maneuverView.updateSecondaryManeuverVisibility(R.style.ManeuverTextAppearance)
+                        // binding.maneuverView.updateSubManeuverViewVisibility(R.style.ManeuverTextAppearance)
+                        // binding.maneuverView.updateStepDistanceTextAppearance(R.style.StepDistanceRemainingAppearance)
+                        binding.maneuverView.renderManeuvers(maneuvers)
+                    }
                 }
         )
 
@@ -977,9 +979,13 @@ class MapboxNavigationView(private val context: ThemedReactContext, private val 
 
         if (isCarplayView) {
             // hide UI elements
+            // These elements are all handled via react-native-carplay interface methods
             binding.soundButton.visibility = View.INVISIBLE
+            binding.recenter.visibility = View.INVISIBLE
+            binding.stop.visibility = View.INVISIBLE
+            binding.tripProgressCard.visibility = View.INVISIBLE
             binding.routeOverview.visibility = View.INVISIBLE
-            binding.tripProgressCard.visibility = View.VISIBLE
+            binding.maneuverView.visibility = View.INVISIBLE
         } else {
             // show UI elements
             binding.soundButton.visibility = View.VISIBLE
