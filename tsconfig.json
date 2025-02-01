@@ -1,14 +1,25 @@
 {
   "compilerOptions": {
+    "declaration": true,
+    "preserveSymlinks": true,
     "target": "es6",
     "module": "es6",
-    "declaration": true,
-    "outDir": "./dist",
-    "strict": false,
+    "allowJs": false,
     "jsx": "react-native",
     "skipLibCheck": true,
-    "moduleResolution": "node"
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "lib": ["es6", "dom"],
+    "esModuleInterop": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true,
+    "noImplicitReturns": true,
+    "outDir": "./dist",
+    "paths": {
+      "react-native": ["./node_modules/react-native"],
+    }
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "**/__tests__/*", "example"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules/**", "**/__tests__/*", "example/**"]
 }

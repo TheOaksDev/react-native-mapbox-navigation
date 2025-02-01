@@ -1,3 +1,1 @@
-import MapboxNavigation from './MapboxNavigation';
-
-export { MapboxNavigation };
+export { default as MapboxNavigation } from './MapboxNavigation';

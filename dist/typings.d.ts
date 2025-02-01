@@ -1,14 +1,14 @@
 /** @type {[number, number]}
  * Provide an array with longitude and latitude [$longitude, $latitude]
  */
-declare type Coordinate = [number, number];
-declare type OnLocationChangeEvent = {
+type Coordinate = [number, number];
+type OnLocationChangeEvent = {
     nativeEvent?: {
         latitude: number;
         longitude: number;
     };
 };
-declare type OnRouteProgressChangeEvent = {
+type OnRouteProgressChangeEvent = {
     nativeEvent?: {
         distanceTraveled: number;
         durationRemaining: number;
@@ -17,12 +17,17 @@ declare type OnRouteProgressChangeEvent = {
         route: object;
     };
 };
-declare type OnErrorEvent = {
+type OnErrorEvent = {
     nativeEvent?: {
         message?: string;
     };
 };
-declare type ComponentStyle = {
+type OnReadyEvent = {
+    nativeEvent?: {
+        message?: string;
+    };
+};
+type ComponentStyle = {
     banner: {
         topBannerBackgroundColor?: string;
         bottomBannerBackgroundColor?: string;
@@ -68,6 +73,7 @@ export interface IMapboxNavigationProps {
     shouldSimulateRoute?: boolean;
     onLocationChange?: (event: OnLocationChangeEvent) => void;
     onRouteProgressChange?: (event: OnRouteProgressChangeEvent) => void;
+    onReady?: (event: OnReadyEvent) => void;
     onError?: (event: OnErrorEvent) => void;
     onCancelNavigation?: () => void;
     onArrive?: () => void;

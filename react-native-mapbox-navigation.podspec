@@ -5,6 +5,7 @@ package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 # TargetsToChangeToDynamic = ['MapboxMobileEvents']
 TargetsToChangeToDynamic = []
 
+rnMapboxMapsDefaultMapboxVersion = '~> 10.19.0'
 $RNMBNAV = Object.new
 
 def $RNMBNAV.post_install(installer)

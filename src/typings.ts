@@ -26,6 +26,12 @@ type OnErrorEvent = {
   };
 };
 
+type OnReadyEvent = {
+  nativeEvent?: {
+    message?: string;
+  };
+};
+
 type ComponentStyle = {
   banner: {
     topBannerBackgroundColor?: string;
@@ -73,6 +79,7 @@ export interface IMapboxNavigationProps {
   shouldSimulateRoute?: boolean;
   onLocationChange?: (event: OnLocationChangeEvent) => void;
   onRouteProgressChange?: (event: OnRouteProgressChangeEvent) => void;
+  onReady?: (event: OnReadyEvent) => void;
   onError?: (event: OnErrorEvent) => void;
   onCancelNavigation?: () => void;
   onArrive?: () => void;
