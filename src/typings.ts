@@ -1,3 +1,5 @@
+import { LayoutRectangle } from "react-native";
+
 /** @type {[number, number]}
  * Provide an array with longitude and latitude [$longitude, $latitude]
  */
@@ -29,6 +31,12 @@ type OnErrorEvent = {
 type OnReadyEvent = {
   nativeEvent?: {
     message?: string;
+  };
+};
+
+type OnLayoutEventType = {
+  nativeEvent?: {
+    layout: LayoutRectangle;
   };
 };
 
@@ -77,6 +85,7 @@ export interface IMapboxNavigationProps {
   origin: Coordinate;
   destination: Coordinate;
   shouldSimulateRoute?: boolean;
+  onLayout?: (event: OnLayoutEventType) => void;
   onLocationChange?: (event: OnLocationChangeEvent) => void;
   onRouteProgressChange?: (event: OnRouteProgressChangeEvent) => void;
   onReady?: (event: OnReadyEvent) => void;

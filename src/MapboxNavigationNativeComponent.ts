@@ -1,9 +1,10 @@
-import type { HostComponent, ViewProps } from 'react-native';
+import type { HostComponent, LayoutRectangle, ViewProps } from 'react-native';
 import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNativeComponent';
 import {
   type RouteProgress,
   type LocationState,
   type ErrorState,
+  type CameraOptions,
 } from './utils';
 import { DirectEventHandler } from 'react-native/Libraries/Types/CodegenTypes';
 
@@ -26,7 +27,12 @@ type OnLocationChangeEventType = {
   payload: string;
 };
 
+type OnLayoutEventType = {
+  layout: LayoutRectangle;
+};
+
 export interface NativeProps extends ViewProps {
+  defaultMapOptions?: OptionalProp<CameraOptions>;
   origin?: OptionalProp<LocationState>;
   destination?: OptionalProp<LocationState>;
   isCarplayView?: OptionalProp<boolean>;
@@ -36,6 +42,7 @@ export interface NativeProps extends ViewProps {
   isDarkMode?: OptionalProp<boolean>;
   onReady?: () => void;
   onCancelNavigation?: () => void;
+  onLayout?: DirectEventHandler<OnLayoutEventType>;
   onRouteProgressChange?: DirectEventHandler<OnRouteProgressChangeEventType>;
   onError?: DirectEventHandler<OnErrorEventType>;
   onArrive?: () => void;
@@ -61,11 +68,16 @@ type OnLocationChangeEventTypeActual = {
   payload: LocationState | string;
 };
 
+type OnLayoutEventTypeActual = {
+  layout: LayoutRectangle;
+};
+
 export type NativeMapboxNavigationViewActual = HostComponent<
   Omit<
     NativeProps,
-    'onRouteProgressChange' | 'onError' | 'onLocationChange'
+    'onLayout' | 'onRouteProgressChange' | 'onError' | 'onLocationChange'
   > & {
+    onLayout?: DirectEventHandler<OnLayoutEventTypeActual>;
     onRouteProgressChange?: DirectEventHandler<OnRouteProgressChangeEventTypeActual>;
     onError?: DirectEventHandler<OnErrorEventTypeActual>;
     onLocationChange?: DirectEventHandler<OnLocationChangeEventTypeActual>;

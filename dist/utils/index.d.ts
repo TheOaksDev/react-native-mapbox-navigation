@@ -1,4 +1,4 @@
-import { TurboModule, ViewProps } from "react-native";
+import { LayoutRectangle, TurboModule, ViewProps } from "react-native";
 import { NativeMapboxNavigationViewActual } from "../MapboxNavigationNativeComponent";
 export type NativeArg = string | number | boolean | null | {
     [k: string]: NativeArg;
@@ -19,10 +19,27 @@ export type LocationState = {
     latitude: number;
     longitude: number;
 };
+export type VisibleArea = {
+    top: number;
+    left: number;
+    bottom: number;
+    right: number;
+    width: number;
+    height: number;
+};
+export type Point = [number, number];
 export type ErrorState = {
     message: string;
 };
+export type CameraOptions = {
+    center: LocationState;
+    zoom: number;
+};
 export type Props = ViewProps & {
+    /**
+     * The default map options to use for the MapView component.
+     */
+    defaultCameraOptions?: CameraOptions;
     /**
      * The origin of the route.
      */
@@ -76,7 +93,11 @@ export type Props = ViewProps & {
      */
     onLocationChange?: (location: LocationState) => void;
     /**
-   * @private Experimental support for custom MapView instances
-   */
+     * This event is triggered when the MapboxNavigation component is laid out.
+     */
+    onLayout?: (layout: LayoutRectangle) => void;
+    /**
+     * @private Experimental support for custom MapView instances
+     */
     _nativeImpl?: NativeMapboxNavigationViewActual;
 };

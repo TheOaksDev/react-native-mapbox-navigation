@@ -107,6 +107,31 @@ class MapboxNavigation extends NativeBridgeComponent((React.PureComponent), Mapb
             yield this._runNative('stopFreeDrive', []);
         });
     }
+    showRoutePreview(coordinates) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this._runNative('showRoutePreview', [coordinates]);
+        });
+    }
+    hideRoutePreview() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this._runNative('hideRoutePreview', []);
+        });
+    }
+    setCameraZoom(zoomLevel) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this._runNative('setCameraZoom', [zoomLevel]);
+        });
+    }
+    setVisibleArea(visibleArea) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this._runNative('setVisibleArea', [visibleArea]);
+        });
+    }
+    getCameraZoom() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this._runNative('getCameraZoom', []);
+        });
+    }
     _decodePayload(payload) {
         if (typeof payload === 'string') {
             return JSON.parse(payload);
@@ -151,6 +176,9 @@ class MapboxNavigation extends NativeBridgeComponent((React.PureComponent), Mapb
             width: e.nativeEvent.layout.width,
             height: e.nativeEvent.layout.height,
         });
+        if (isFunction(this.props.onLayout)) {
+            this.props.onLayout(e.nativeEvent.layout);
+        }
     }
     render() {
         //return <NativeMapboxNavigationView {...this.props} {...callbacks} />;
@@ -162,6 +190,8 @@ class MapboxNavigation extends NativeBridgeComponent((React.PureComponent), Mapb
             onError: this._onError,
             onArrive: this._onArrive,
             onLocationChange: this._onLocationChange,
+            onLayout: this._onLayout,
+            onRouteProgressChange: this._onRouteProgressChange,
         };
         let mapView = null;
         if (this.state.isReady) {
@@ -190,6 +220,13 @@ MapboxNavigation.defaultProps = {
     isCarplayView: false,
     isDarkMode: false,
     freeDrive: false,
+    defaultCameraOptions: {
+        center: {
+            latitude: 39.8283,
+            longitude: -98.5795,
+        },
+        zoom: 5,
+    },
 };
 const RNMapboxNavigationView = NativeMapboxNavigationView;
 export default MapboxNavigation;

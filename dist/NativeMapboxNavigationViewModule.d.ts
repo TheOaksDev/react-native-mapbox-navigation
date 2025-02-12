@@ -5,6 +5,11 @@ export interface Spec extends TurboModule {
     stopNavigation: (viewRef: Int32 | null) => void;
     startFreeDrive: (viewRef: Int32 | null) => void;
     stopFreeDrive: (viewRef: Int32 | null) => void;
+    showRoutePreview: (viewRef: Int32 | null, coordinates: ReadonlyArray<ReadonlyMap<string, number>>) => void;
+    hideRoutePreview: (viewRef: Int32 | null) => void;
+    setCameraZoom: (viewRef: Int32 | null, zoomLevel: number) => void;
+    getCameraZoom: (viewRef: Int32 | null) => number;
+    setVisibleArea: (viewRef: Int32 | null, visibleArea: ReadonlyMap<string, number>) => void;
 }
 declare const _default: Spec;
 export default _default;

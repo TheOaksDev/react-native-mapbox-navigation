@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { NativeMethods } from 'react-native';
 import type { LayoutRectangle, NativeSyntheticEvent } from 'react-native';
-import { ErrorState, LocationState, NativeArg, Props, RouteProgress } from './utils';
+import { ErrorState, LocationState, NativeArg, Props, RouteProgress, VisibleArea } from './utils';
 declare const MapboxNavigation_base: {
     new (...args: any[]): {
         _turboModule: import("react-native").TurboModule;
@@ -60,6 +60,11 @@ declare class MapboxNavigation extends MapboxNavigation_base {
     stopNavigation(): Promise<void>;
     startFreeDrive(): Promise<void>;
     stopFreeDrive(): Promise<void>;
+    showRoutePreview(coordinates: LocationState[]): Promise<void>;
+    hideRoutePreview(): Promise<void>;
+    setCameraZoom(zoomLevel: number): Promise<void>;
+    setVisibleArea(visibleArea: VisibleArea): Promise<void>;
+    getCameraZoom(): Promise<number>;
     _decodePayload<T>(payload: T | string): T;
     _onReady(): void;
     _onCancelNavigation(): void;
@@ -79,7 +84,10 @@ declare class MapboxNavigation extends MapboxNavigation_base {
     }>): void;
     render(): JSX.Element;
 }
-type NativeProps = Omit<Props, 'onRouteProgressChange' | 'onError' | 'onLocationChange'> & {
+type NativeProps = Omit<Props, 'onLayout' | 'onRouteProgressChange' | 'onError' | 'onLocationChange'> & {
+    onLayout?: (event: NativeSyntheticEvent<{
+        layout: LayoutRectangle;
+    }>) => void;
     onRouteProgressChange?: (event: NativeSyntheticEvent<{
         type: string;
         payload: RouteProgress | string;

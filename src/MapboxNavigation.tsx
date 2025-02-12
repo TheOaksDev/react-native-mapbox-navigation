@@ -44,6 +44,7 @@ import {
   NativeArg,
   Props,
   RouteProgress,
+  VisibleArea,
 } from './utils';
 import NativeMapboxNavigationView, {
   type NativeMapboxNavigationViewActual,
@@ -73,6 +74,13 @@ class MapboxNavigation extends NativeBridgeComponent(
     isCarplayView: false,
     isDarkMode: false,
     freeDrive: false,
+    defaultCameraOptions: { // US Center (Kansas)
+      center: {
+        latitude: 39.8283,
+        longitude: -98.5795,
+      },
+      zoom: 5,
+    },
   };
 
   _nativeRef?: NativeMapboxNavigationRefType;
@@ -157,6 +165,26 @@ class MapboxNavigation extends NativeBridgeComponent(
     await this._runNative<void>('stopFreeDrive', []);
   }
 
+  async showRoutePreview(coordinates: LocationState[]): Promise<void> {
+    await this._runNative<void>('showRoutePreview', [coordinates]);
+  }
+
+  async hideRoutePreview(): Promise<void> {
+    await this._runNative<void>('hideRoutePreview', []);
+  }
+
+  async setCameraZoom(zoomLevel: number): Promise<void> {
+    await this._runNative<void>('setCameraZoom', [zoomLevel]);
+  }
+
+  async setVisibleArea(visibleArea: VisibleArea): Promise<void> {
+    await this._runNative<void>('setVisibleArea', [visibleArea]);
+  }
+
+  async getCameraZoom(): Promise<number> {
+    return await this._runNative<number>('getCameraZoom', []);
+  }
+
   _decodePayload<T>(payload: T | string): T {
     if (typeof payload === 'string') {
       return JSON.parse(payload);
@@ -215,6 +243,9 @@ class MapboxNavigation extends NativeBridgeComponent(
       width: e.nativeEvent.layout.width,
       height: e.nativeEvent.layout.height,
     });
+    if (isFunction(this.props.onLayout)) {
+      this.props.onLayout(e.nativeEvent.layout);
+    }
   }
 
   render() {
@@ -233,6 +264,8 @@ class MapboxNavigation extends NativeBridgeComponent(
       onError: this._onError,
       onArrive: this._onArrive,
       onLocationChange: this._onLocationChange,
+      onLayout: this._onLayout,
+      onRouteProgressChange: this._onRouteProgressChange,
     };
     let mapView = null;
     if (this.state.isReady) {
@@ -256,8 +289,13 @@ class MapboxNavigation extends NativeBridgeComponent(
 
 type NativeProps = Omit<
   Props,
-  'onRouteProgressChange' | 'onError' | 'onLocationChange'
+  'onLayout' | 'onRouteProgressChange' | 'onError' | 'onLocationChange'
 > & {
+  onLayout?: (
+    event: NativeSyntheticEvent<{
+      layout: LayoutRectangle;
+    }>,
+  ) => void;
   onRouteProgressChange?: (
     event: NativeSyntheticEvent<{
       type: string;

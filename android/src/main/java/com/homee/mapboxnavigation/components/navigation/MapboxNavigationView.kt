@@ -5,15 +5,13 @@ package com.homee.mapboxnavigation.components.navigation
 // import com.mapbox.navigation.core.replay.ReplayLocationEngine
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.res.Configuration
-import android.content.res.Resources
 import android.graphics.Color
+import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.OnLayoutChangeListener
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
@@ -22,6 +20,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.ViewTreeLifecycleOwner
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.bridge.WritableNativeMap
@@ -34,6 +33,7 @@ import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.bindgen.Expected
 import com.mapbox.common.location.Location
 import com.mapbox.geojson.Point
+import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.ImageHolder
 import com.mapbox.maps.MapView
@@ -94,6 +94,7 @@ import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineApiOptions
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineViewOptions
 import com.mapbox.navigation.ui.maps.route.line.model.NavigationRouteLine
+import com.mapbox.navigation.ui.maps.route.line.model.RouteLineColorResources
 import com.mapbox.navigation.voice.api.MapboxSpeechApi
 import com.mapbox.navigation.voice.api.MapboxVoiceInstructionsPlayer
 import com.mapbox.navigation.voice.model.SpeechAnnouncement
@@ -169,7 +170,7 @@ class MapboxNavigationLifeCycle {
 
     fun onDestroy() {
         if (lifecycleOwner?.lifecycle?.currentState == Lifecycle.State.STARTED ||
-                        lifecycleOwner?.lifecycle?.currentState == Lifecycle.State.RESUMED
+                lifecycleOwner?.lifecycle?.currentState == Lifecycle.State.RESUMED
         ) {
             lifecycleOwner?.handleLifecycleEvent(androidx.lifecycle.Lifecycle.Event.ON_STOP)
         }
@@ -246,6 +247,23 @@ open class MapboxNavigationView(
         mapboxNavigation.unregisterRouteProgressObserver(replayProgressObserver)
     }
 
+    private fun calculatePadding(
+            top: Int,
+            left: Int,
+            bottom: Int,
+            right: Int,
+            width: Int,
+            height: Int
+    ): EdgeInsets {
+        // Calculate padding based on the visible area
+        val topPadding = top.toDouble()
+        val leftPadding = left.toDouble()
+        val bottomPadding = (height - bottom).toDouble() // Assuming 1920 is the full height
+        val rightPadding = (width - right).toDouble() // Assuming 1920 is the full width
+
+        return EdgeInsets(topPadding, leftPadding, bottomPadding, rightPadding)
+    }
+
     override fun setId(id: Int) {
         super.setId(id)
         manager.tagAssigned(id)
@@ -298,6 +316,11 @@ open class MapboxNavigationView(
     private var isCarplayView = false
     private var isDarkMode = false
     private var isFreeDrive = false
+    private var defaultCameraOptions: CameraOptions? = null
+
+    private var visibleArea: Rect? = null
+    private var screenWidth: Int = 0
+    private var screenHeight: Int = 0
 
     /**
      * Debug tool used to play, pause and seek route progress events that can be used to produce
@@ -340,44 +363,6 @@ open class MapboxNavigationView(
      * to execute.
      */
     private lateinit var viewportDataSource: MapboxNavigationViewportDataSource
-
-    /*
-     * Below are generated camera padding values to ensure that the route fits well on screen while
-     * other elements are overlaid on top of the map (including instruction view, buttons, etc.)
-     */
-    private val pixelDensity = Resources.getSystem().displayMetrics.density
-    private val overviewPadding: EdgeInsets by lazy {
-        EdgeInsets(
-                140.0 * pixelDensity,
-                40.0 * pixelDensity,
-                120.0 * pixelDensity,
-                40.0 * pixelDensity
-        )
-    }
-    private val landscapeOverviewPadding: EdgeInsets by lazy {
-        EdgeInsets(
-                30.0 * pixelDensity,
-                380.0 * pixelDensity,
-                110.0 * pixelDensity,
-                20.0 * pixelDensity
-        )
-    }
-    private val followingPadding: EdgeInsets by lazy {
-        EdgeInsets(
-                180.0 * pixelDensity,
-                40.0 * pixelDensity,
-                150.0 * pixelDensity,
-                40.0 * pixelDensity
-        )
-    }
-    private val landscapeFollowingPadding: EdgeInsets by lazy {
-        EdgeInsets(
-                30.0 * pixelDensity,
-                380.0 * pixelDensity,
-                110.0 * pixelDensity,
-                40.0 * pixelDensity
-        )
-    }
 
     /**
      * Generates updates for the [MapboxManeuverView] to display the upcoming maneuver instructions
@@ -595,12 +580,14 @@ open class MapboxNavigationView(
             object : RoutesObserver {
                 override fun onRoutesChanged(result: RoutesUpdatedResult) {
                     try {
+                        Log.d("RouteObserver", "Routes Line Changed")
                         if (result.navigationRoutes.isNotEmpty()) {
 
                             val routeLines =
                                     result.navigationRoutes.map { NavigationRouteLine(it, null) }
                             routeLineApi.setNavigationRouteLines(routeLines) { value ->
                                 mapStyle?.let { style ->
+                                    Log.d("RouteObserver", "Setting Route Line")
                                     routeLineView.renderRouteDrawData(style, value)
                                 }
                             }
@@ -611,6 +598,7 @@ open class MapboxNavigationView(
                         } else {
                             // remove the route line and route arrow from the map
 
+                            Log.d("RouteObserver", "Removing Route Line")
                             mapStyle?.let { style ->
                                 routeLineApi.clearRouteLine { value ->
                                     routeLineView.renderClearRouteLineValue(style, value)
@@ -662,22 +650,46 @@ open class MapboxNavigationView(
                 "MapboxNavigationView",
                 "Layout Left ${left} Top ${top} Right ${right} Bottom ${bottom}"
         )
+
+        // update the visible area
+        //updateViewportPadding(top, left, bottom, right, width, height)
+
         layout(left, top, right, bottom)
     }
 
     private fun setCameraPositionToOrigin() {
-        //        val startingLocation = Location(origin!!.latitude(), origin!!.longitude(),
-        // System.currentTimeMillis(), null, null, null, null, null, null, null, null, null, null,
-        // null)
-        //        startingLocation.latitude = origin!!.latitude()
-        //        startingLocation.longitude = origin!!.longitude()
-        //        viewportDataSource.onLocationChanged(startingLocation)
+        val startingLocation =
+                Location.Builder()
+                        .latitude(origin!!.latitude())
+                        .longitude(origin!!.longitude())
+                        .build()
+
+        viewportDataSource.onLocationChanged(startingLocation)
+        viewportDataSource.evaluate()
 
         navigationCamera.requestNavigationCameraToFollowing(
                 stateTransitionOptions =
-                        NavigationCameraTransitionOptions.Builder()
-                                .maxDuration(0) // instant transition
-                                .build()
+                NavigationCameraTransitionOptions.Builder()
+                        .maxDuration(0) // instant transition
+                        .build()
+        )
+    }
+
+    private fun setCameraPositionToFollowUser() {
+        val startingLocation =
+                Location.Builder()
+                        .latitude(defaultCameraOptions!!.center!!.latitude())
+                        .longitude(defaultCameraOptions!!.center!!.longitude())
+                        .build()
+
+        viewportDataSource.onLocationChanged(startingLocation)
+        viewportDataSource.evaluate()
+
+        navigationCamera.requestNavigationCameraToFollowing(
+                stateTransitionOptions =
+                NavigationCameraTransitionOptions.Builder()
+                        .maxDuration(0) // instant transition
+                        .build()
         )
     }
 
@@ -715,6 +727,9 @@ open class MapboxNavigationView(
                     MapboxNavigationProvider.create(NavigationOptions.Builder(context).build())
                 }
 
+        // set the default map camera options
+        defaultCameraOptions?.let { mapboxMap.setCamera(it) }
+
         // initialize Navigation Camera
         viewportDataSource = MapboxNavigationViewportDataSource(mapboxMap)
 
@@ -728,28 +743,22 @@ open class MapboxNavigationView(
             // shows/hide the recenter button depending on the camera state
             when (navigationCameraState) {
                 NavigationCameraState.TRANSITION_TO_FOLLOWING, NavigationCameraState.FOLLOWING ->
-                        binding.recenter.visibility = View.INVISIBLE
+                    binding.recenter.visibility = View.INVISIBLE
                 NavigationCameraState.TRANSITION_TO_OVERVIEW,
                 NavigationCameraState.OVERVIEW,
                 NavigationCameraState.IDLE -> binding.recenter.visibility = View.VISIBLE
             }
         }
         // set the padding values depending on screen orientation and visible view layout
-
-        if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            Log.d("MapboxNavigationStyles", "Landscape Overview Padding")
-            viewportDataSource.overviewPadding = landscapeOverviewPadding
-        } else {
-            Log.d("MapboxNavigationStyles", "Portrait Overview Padding")
-            viewportDataSource.overviewPadding = overviewPadding
-        }
-        if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            Log.d("MapboxNavigationStyles", "Landscape Following Padding")
-            viewportDataSource.followingPadding = landscapeFollowingPadding
-        } else {
-            Log.d("MapboxNavigationStyles", "Portrait Following Padding")
-            viewportDataSource.followingPadding = followingPadding
-        }
+        // if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+        //     Log.d("MapboxNavigationStyles", "Landscape Following Padding")
+        //     viewportDataSource.followingPadding = landscapeFollowingPadding
+        //     viewportDataSource.overviewPadding = landscapeOverviewPadding
+        // } else {
+        //     Log.d("MapboxNavigationStyles", "Portrait Following Padding")
+        //     viewportDataSource.followingPadding = followingPadding
+        //     viewportDataSource.overviewPadding = overviewPadding
+        // }
 
         // Load the map style and store it in the mapStyle variable
         mapboxMap.loadStyle(Style.STANDARD) { style ->
@@ -820,15 +829,20 @@ open class MapboxNavigationView(
             speechApi = MapboxSpeechApi(context, Locale.US.language)
             voiceInstructionsPlayer = MapboxVoiceInstructionsPlayer(context, Locale.US.language)
 
-            initRouteLineComponent()
+            // initRouteLineComponent()
             setCameraPositionToOrigin()
         }
 
+        initRouteLineComponent()
         startLocationTracking()
-        navigationCamera.requestNavigationCameraToFollowing()
         mapboxNavigation.startTripSession()
+        setCameraPositionToFollowUser()
+        updateViewportPadding()
 
-        val readyEvent = MapChangeEvent(this, EventTypes.MAP_ON_READY)
+        val properties: WritableMap = WritableNativeMap()
+        properties.putString("message", "Ready Event")
+        val readyEvent = MapChangeEvent(this@MapboxNavigationView, EventTypes.MAP_ON_READY, properties)
+        Log.d("MapboxNavigationViewportUpdate", "Ready Event")
         manager.handleEvent(readyEvent)
         isInitialized = true
     }
@@ -838,11 +852,19 @@ open class MapboxNavigationView(
         // the route line below road labels layer on the map
         // the value of this option will depend on the style that you are using
         // and under which layer the route line should be placed on the map layers stack
+        val customColorResources =
+                RouteLineColorResources.Builder()
+                        .inActiveRouteLegsColor(Color.parseColor("#FFCC00"))
+                        .build()
         val mapboxRouteLineOptions =
                 MapboxRouteLineViewOptions.Builder(context)
                         .routeLineBelowLayerId(LocationComponentConstants.LOCATION_INDICATOR_LAYER)
+                        .routeLineColorResources(customColorResources)
                         .build()
-        val mapboxRouteLineAPIOptions = MapboxRouteLineApiOptions.Builder().build()
+        val mapboxRouteLineAPIOptions =
+                MapboxRouteLineApiOptions.Builder()
+                        .styleInactiveRouteLegsIndependently(true)
+                        .build()
         routeLineApi = MapboxRouteLineApi(mapboxRouteLineAPIOptions)
         routeLineView = MapboxRouteLineView(mapboxRouteLineOptions)
 
@@ -862,6 +884,22 @@ open class MapboxNavigationView(
             enabled = true
             // Use slot-based positioning
             slot = "top" // Positions the puck above POI labels and behind Place labels
+        }
+    }
+
+    private fun hideLocationPuckComponent() {
+        val locationComponentPlugin = binding.mapView.location
+        locationComponentPlugin.updateSettings {
+            //            locationPuck =
+            //                    LocationPuck2D(
+            //                            bearingImage =
+            // ImageHolder.from(R.drawable.mapbox_navigation_puck_icon),
+            //                    )
+            //            puckBearingEnabled = true
+            enabled = false
+            // Use slot-based positioning
+            //            slot = "top" // Positions the puck above POI labels and behind Place
+            // labels
         }
     }
 
@@ -1186,6 +1224,10 @@ open class MapboxNavigationView(
         // updateNavigationMode()
     }
 
+    fun setDefaultCameraOptions(defaultCameraOptions: CameraOptions?) {
+        this.defaultCameraOptions = defaultCameraOptions
+    }
+
     fun setOrigin(origin: Point?) {
         this.origin = origin
         // updateNavigationMode()
@@ -1304,5 +1346,188 @@ open class MapboxNavigationView(
         } catch (ex: Exception) {
             response.error(ex.toString())
         }
+    }
+
+    public fun showRoutePreview(coordinates: ReadableArray, response: CommandResponse) {
+        try {
+            Log.d("MapboxNavigationStyles", "Showing Route Preview")
+
+            val coordinateList = mutableListOf<Pair<Double, Double>>()
+
+            // Extract coordinates from the array
+            for (i in 0 until coordinates.size()) {
+                val coord = coordinates.getMap(i)
+                if (coord != null) {
+                    val longitude = coord.getDouble("longitude")
+                    val latitude = coord.getDouble("latitude")
+                    coordinateList.add(Pair(longitude, latitude))
+                }
+            }
+
+            if (coordinateList.size < 2) {
+                response.error("At least two coordinate pairs are required.")
+                return
+            }
+
+            // Create a semicolon-separated list of coordinates
+            val coordinatesString = coordinateList.joinToString(";") { "${it.first},${it.second}" }
+
+            val routeOptions =
+                    RouteOptions.builder()
+                            .profile(DirectionsCriteria.PROFILE_DRIVING_TRAFFIC)
+                            .annotationsList(
+                                    listOf(
+                                            DirectionsCriteria.ANNOTATION_CONGESTION_NUMERIC,
+                                            DirectionsCriteria.ANNOTATION_DISTANCE
+                                    )
+                            )
+                            .coordinates(coordinatesString)
+                            .steps(true)
+                            .build()
+
+            mapboxNavigation.requestRoutes(
+                    routeOptions,
+                    object : NavigationRouterCallback {
+                        override fun onCanceled(routeOptions: RouteOptions, routerOrigin: String) {
+                            Log.d("MapboxRequestRoutes", "Routes Cancelled update")
+                            // no impl
+                        }
+
+                        override fun onFailure(
+                                reasons: List<RouterFailure>,
+                                routeOptions: RouteOptions
+                        ) {
+                            sendErrorToReact("Error finding route $reasons")
+                            Log.d("MapboxRequestRoutes", "Routes Failed to update")
+                            response.error(reasons.toString())
+                        }
+
+                        override fun onRoutesReady(
+                                routes: List<NavigationRoute>,
+                                routerOrigin: String
+                        ) {
+                            Log.d("MapboxRequestRoutes", "Routes Ready")
+
+                            val routeLines = routes.map { NavigationRouteLine(it, null) }
+                            routeLineApi.setNavigationRouteLines(routeLines) { value ->
+                                mapStyle?.let { style ->
+                                    Log.d("MapboxRequestRoutes", "Setting Route Line")
+                                    routeLineView.renderRouteDrawData(style, value)
+                                }
+                            }
+
+                            hideLocationPuckComponent()
+
+                            // if (this@MapboxNavigationView.resources.configuration.orientation ==
+                            //                 Configuration.ORIENTATION_LANDSCAPE
+                            // ) {
+                            //     Log.d("MapboxNavigationStyles", "Landscape Following Padding")
+                            //     viewportDataSource.followingPadding = landscapeFollowingPadding
+                            //     viewportDataSource.overviewPadding = landscapeOverviewPadding
+                            // } else {
+                            //     Log.d("MapboxNavigationStyles", "Portrait Following Padding")
+                            //     viewportDataSource.followingPadding = followingPadding
+                            //     viewportDataSource.overviewPadding = overviewPadding
+                            // }
+
+                            viewportDataSource.onRouteChanged(routes.first())
+                            viewportDataSource.evaluate()
+                            navigationCamera.requestNavigationCameraToOverview()
+
+                            Log.d("MapboxRequestRoutes", "Routes Set & Camera Updated")
+
+                            response.success { it.putBoolean("success", true) }
+                        }
+                    }
+            )
+        } catch (ex: Exception) {
+            response.error(ex.toString())
+        }
+    }
+
+    public fun hideRoutePreview(response: CommandResponse) {
+        try {
+            Log.d("MapboxNavigationStyles", "Hiding Route Preview")
+            mapStyle?.let { style ->
+                routeLineApi.clearRouteLine { value ->
+                    routeLineView.renderClearRouteLineValue(style, value)
+                }
+                routeArrowView.render(style, routeArrowApi.clearArrows())
+            }
+
+            initLocationPuckComponent()
+
+            // if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
+            // {
+            //     Log.d("MapboxNavigationStyles", "Landscape Following Padding")
+            //     viewportDataSource.followingPadding = landscapeFollowingPadding
+            //     viewportDataSource.overviewPadding = landscapeOverviewPadding
+            // } else {
+            //     Log.d("MapboxNavigationStyles", "Portrait Following Padding")
+            //     viewportDataSource.followingPadding = followingPadding
+            //     viewportDataSource.overviewPadding = overviewPadding
+            // }
+
+            // remove the route reference from camera position evaluations
+            viewportDataSource.clearRouteData()
+            viewportDataSource.evaluate()
+            navigationCamera.requestNavigationCameraToFollowing()
+
+            response.success { it.putBoolean("success", true) }
+        } catch (ex: Exception) {
+            response.error(ex.toString())
+        }
+    }
+
+    private fun updateViewportPadding() {
+        Log.d("MapboxNavigationViewportUpdate", "Updating Viewport Padding")
+        visibleArea?.let { area ->
+            Log.d("MapboxNavigationViewportUpdate", "Visible Area: $area")
+            if (screenWidth > 0 && screenHeight > 0) {
+                Log.d("MapboxNavigationViewportUpdate", "Screen Width: $screenWidth, Screen Height: $screenHeight")
+                val padding = calculatePadding(area.top, area.left, area.bottom, area.right, screenWidth, screenHeight)
+                viewportDataSource.overviewPadding = padding
+                viewportDataSource.followingPadding = padding
+                viewportDataSource.evaluate()
+            }
+        }
+    }
+
+    public fun setVisibleArea(
+            top: Int,
+            left: Int,
+            bottom: Int,
+            right: Int,
+            width: Int,
+            height: Int,
+            response: CommandResponse
+    ) {
+        Log.d("MapboxNavigationStyles", "Setting Visible Area")
+        screenWidth = width
+        screenHeight = height
+        visibleArea = Rect(left, top, right, bottom)
+        updateViewportPadding()
+        response.success { it.putBoolean("success", true) }
+    }
+
+    public fun setCameraZoom(zoomLevel: Double, response: CommandResponse) {
+        try {
+            Log.d("MapboxNavigationStyles", "Hiding Route Preview")
+            // Set a specific zoom level for the overview
+            val overviewCameraOptions =
+                    CameraOptions.Builder()
+                            .zoom(zoomLevel) // Set your desired zoom level for overview
+                            .build()
+            mapboxMap.setCamera(overviewCameraOptions)
+
+            response.success { it.putBoolean("success", true) }
+        } catch (ex: Exception) {
+            response.error(ex.toString())
+        }
+    }
+
+    public fun getCameraZoom(response: CommandResponse) {
+        val zoomLevel = mapboxMap.cameraState.zoom
+        response.success { it.putDouble("zoomLevel", zoomLevel) }
     }
 }

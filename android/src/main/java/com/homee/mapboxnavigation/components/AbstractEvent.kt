@@ -1,5 +1,6 @@
 package com.homee.mapboxnavigation.components
 
+import android.util.Log
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.events.Event
 import com.facebook.react.uimanager.events.RCTEventEmitter
@@ -15,7 +16,8 @@ class AbstractEvent(
     }
 
     override fun dispatch(rctEventEmitter: RCTEventEmitter) {
-        rctEventEmitter.receiveEvent(viewTag, eventName, mEvent)
+        Log.d("MapboxNavigationViewportUpdate", "Dispatching event: ${viewTag} - ${mEventName}")
+        rctEventEmitter.receiveEvent(viewTag, mEventName, mEvent)
     }
 
     override fun canCoalesce(): Boolean {

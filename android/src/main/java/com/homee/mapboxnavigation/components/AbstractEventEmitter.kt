@@ -1,6 +1,7 @@
 package com.homee.mapboxnavigation.components
 
 import android.app.Activity
+import android.util.Log
 import android.view.ViewGroup
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.common.MapBuilder
@@ -34,15 +35,19 @@ abstract class AbstractEventEmitter<T : ViewGroup>(reactApplicationContext: Reac
     }
 
     fun handleEvent(event: IEvent) {
+        Log.d("MapboxNavigationViewportUpdate", "Handling event: $event")
         val eventCacheKey = getEventCacheKey(event)
 
+        Log.d("MapboxNavigationViewportUpdate", "Event Cache Key: $eventCacheKey")
         // fail safe to protect bridge from being spammed
         if (shouldDropEvent(eventCacheKey, event)) {
+            Log.d("MapboxNavigationViewportUpdate", "Event should be dropped")
             return
         }
         mRateLimitedEvents[eventCacheKey] = System.currentTimeMillis()
 
         try {
+            Log.d("MapboxNavigationViewportUpdate", "Dispatching event 1: $event")
             mEventDispatcher!!.dispatchEvent(
                 AbstractEvent(
                     event.iD,

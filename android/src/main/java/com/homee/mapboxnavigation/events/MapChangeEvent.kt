@@ -4,14 +4,13 @@ import android.view.View
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.WritableMap
 
-open class MapChangeEvent
-constructor(
-        view: View,
-        eventType: String,
-        private val mPayload: WritableMap = Arguments.createMap()
-) : AbstractEvent(view, eventType) {
+open class MapChangeEvent(
+    view: View,
+    private val mEventType: String,
+    private val mPayload: WritableMap = Arguments.createMap()
+) : AbstractEvent(view, mEventType) {
     override val key: String
-        get() = EventKeys.MAP_ON_LOCATION_CHANGE.value
+        get() = mEventType
 
     override val payload: WritableMap
         get() {

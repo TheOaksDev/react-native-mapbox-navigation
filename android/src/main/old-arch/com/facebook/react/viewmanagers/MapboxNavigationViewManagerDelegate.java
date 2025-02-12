@@ -22,6 +22,9 @@ public class MapboxNavigationViewManagerDelegate<T extends View, U extends BaseV
   @Override
   public void setProperty(T view, String propName, @Nullable Object value) {
     switch (propName) {
+      case "defaultCameraOptions":
+        mViewManager.setDefaultCameraOptions(view, new DynamicFromObject(value));
+        break;
       case "origin":
         mViewManager.setOrigin(view, new DynamicFromObject(value));
         break;

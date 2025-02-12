@@ -13,6 +13,7 @@ import android.view.View;
 import com.facebook.react.bridge.Dynamic;
 
 public interface MapboxNavigationViewManagerInterface<T extends View> {
+  void setDefaultCameraOptions(T view, Dynamic value);
   void setOrigin(T view, Dynamic value);
   void setDestination(T view, Dynamic value);
   void setShouldSimulateRoute(T view, Dynamic value);

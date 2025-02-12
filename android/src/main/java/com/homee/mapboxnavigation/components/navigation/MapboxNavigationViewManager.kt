@@ -20,6 +20,7 @@ import com.homee.mapboxnavigation.events.eventMapOf
 import com.homee.mapboxnavigation.utils.ViewTagResolver
 import com.mapbox.common.MapboxOptions
 import com.mapbox.geojson.Point
+import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.TileStoreUsageMode
 import com.mapbox.maps.mapsOptions
 import javax.annotation.Nonnull
@@ -142,6 +143,24 @@ class MapboxNavigationViewManager(
                 EventKeys.MAP_ON_ARRIVE to "onArrive",
                 EventKeys.MAP_ON_ROUTE_PROGRESS_CHANGE to "onRouteProgressChange",
         )
+    }
+
+    @ReactProp(name = "defaultCameraOptions")
+    override fun setDefaultCameraOptions(view: MapboxNavigationView, sources: Dynamic) {
+        val options = sources.asMap()
+        val center = options.getMap("center")
+        val zoom = options.getDouble("zoom")
+        val cameraOptions = CameraOptions.Builder()
+        
+        center?.let {
+            cameraOptions.center(Point.fromLngLat(center.getDouble("longitude"), center.getDouble("latitude")))
+        }
+        
+        zoom?.let {
+            cameraOptions.zoom(zoom)
+        }
+        
+        view.setDefaultCameraOptions(cameraOptions.build())
     }
 
     @ReactProp(name = "origin")
