@@ -1,4 +1,4 @@
-@objc(MapboxNavigationManager)
+@objc(MapboxNavigationView)
 class MapboxNavigationManager: RCTViewManager {
   override func view() -> UIView! {
     return MapboxNavigationView();
