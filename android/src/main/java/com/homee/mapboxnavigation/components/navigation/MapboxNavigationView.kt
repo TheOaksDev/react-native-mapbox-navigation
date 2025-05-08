@@ -43,6 +43,7 @@ import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.animation.camera
 import com.mapbox.maps.plugin.locationcomponent.LocationComponentConstants
 import com.mapbox.maps.plugin.locationcomponent.location
+import com.mapbox.navigation.base.ExperimentalPreviewMapboxNavigationAPI
 import com.mapbox.navigation.base.TimeFormat
 import com.mapbox.navigation.base.extensions.applyDefaultNavigationOptions
 import com.mapbox.navigation.base.extensions.applyLanguageAndVoiceUnitOptions
@@ -89,6 +90,9 @@ import com.mapbox.navigation.ui.maps.location.NavigationLocationProvider
 import com.mapbox.navigation.ui.maps.route.arrow.api.MapboxRouteArrowApi
 import com.mapbox.navigation.ui.maps.route.arrow.api.MapboxRouteArrowView
 import com.mapbox.navigation.ui.maps.route.arrow.model.RouteArrowOptions
+import com.mapbox.navigation.ui.maps.route.callout.api.MapboxRouteCalloutApi
+import com.mapbox.navigation.ui.maps.route.callout.api.MapboxRouteCalloutView
+//import com.mapbox.navigation.ui.maps.route.callout.model.RouteCalloutResult
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineApiOptions
@@ -394,6 +398,14 @@ open class MapboxNavigationView(
     /** Draws maneuver arrows on the map based on the data [routeArrowApi]. */
     private lateinit var routeArrowView: MapboxRouteArrowView
 
+    /** Draws route callout on the map based on the data [routeCalloutApi]. */
+    @OptIn(ExperimentalPreviewMapboxNavigationAPI::class)
+    private var routeCalloutApi = MapboxRouteCalloutApi()
+
+    /** Draws route callout on the map based on the data [routeCalloutApi]. */
+    @OptIn(ExperimentalPreviewMapboxNavigationAPI::class)
+    private lateinit var routeCalloutView: MapboxRouteCalloutView
+
     /**
      * Stores and updates the state of whether the voice instructions should be played as they come
      * or muted.
@@ -652,7 +664,7 @@ open class MapboxNavigationView(
         )
 
         // update the visible area
-        //updateViewportPadding(top, left, bottom, right, width, height)
+        // updateViewportPadding(top, left, bottom, right, width, height)
 
         layout(left, top, right, bottom)
     }
@@ -841,12 +853,14 @@ open class MapboxNavigationView(
 
         val properties: WritableMap = WritableNativeMap()
         properties.putString("message", "Ready Event")
-        val readyEvent = MapChangeEvent(this@MapboxNavigationView, EventTypes.MAP_ON_READY, properties)
+        val readyEvent =
+                MapChangeEvent(this@MapboxNavigationView, EventTypes.MAP_ON_READY, properties)
         Log.d("MapboxNavigationViewportUpdate", "Ready Event")
         manager.handleEvent(readyEvent)
         isInitialized = true
     }
 
+    @OptIn(ExperimentalPreviewMapboxNavigationAPI::class)
     private fun initRouteLineComponent() {
         // initialize route line, the withRouteLineBelowLayerId is specified to place
         // the route line below road labels layer on the map
@@ -854,7 +868,8 @@ open class MapboxNavigationView(
         // and under which layer the route line should be placed on the map layers stack
         val customColorResources =
                 RouteLineColorResources.Builder()
-                        .inActiveRouteLegsColor(Color.parseColor("#FFCC00"))
+                        .routeDefaultColor(Color.parseColor("#3767D6"))
+                        .inActiveRouteLegsColor(Color.parseColor("#1A3980"))
                         .build()
         val mapboxRouteLineOptions =
                 MapboxRouteLineViewOptions.Builder(context)
@@ -868,6 +883,16 @@ open class MapboxNavigationView(
         routeLineApi = MapboxRouteLineApi(mapboxRouteLineAPIOptions)
         routeLineView = MapboxRouteLineView(mapboxRouteLineOptions)
 
+        routeCalloutApi = MapboxRouteCalloutApi()
+//        val routeCalloutViewOptions =
+//                MapboxRouteCalloutViewOptions.Builder()
+//                        .backgroundColor(Color.parseColor("#F8F9FA"))
+//                        .selectedBackgroundColor(Color.parseColor("#F8F9FA"))
+//                        .textColor(Color.parseColor("#4a4a4a"))
+//                        .selectedTextColor(Color.parseColor("#4a4a4a"))
+//                        .build()
+        routeCalloutView = MapboxRouteCalloutView(mapboxMapView)
+
         // initialize maneuver arrow view to draw arrows on the map
         val routeArrowOptions = RouteArrowOptions.Builder(context).build()
         routeArrowView = MapboxRouteArrowView(routeArrowOptions)
@@ -879,6 +904,7 @@ open class MapboxNavigationView(
             locationPuck =
                     LocationPuck2D(
                             bearingImage = ImageHolder.from(R.drawable.mapbox_navigation_puck_icon),
+                            shadowImage = ImageHolder.from(R.drawable.mapbox_user_stroke_icon)
                     )
             puckBearingEnabled = true
             enabled = true
@@ -890,16 +916,14 @@ open class MapboxNavigationView(
     private fun hideLocationPuckComponent() {
         val locationComponentPlugin = binding.mapView.location
         locationComponentPlugin.updateSettings {
-            //            locationPuck =
-            //                    LocationPuck2D(
-            //                            bearingImage =
-            // ImageHolder.from(R.drawable.mapbox_navigation_puck_icon),
-            //                    )
-            //            puckBearingEnabled = true
-            enabled = false
-            // Use slot-based positioning
-            //            slot = "top" // Positions the puck above POI labels and behind Place
-            // labels
+            locationPuck =
+                    LocationPuck2D(
+                            topImage = ImageHolder.from(R.drawable.mapbox_user_icon),
+                            shadowImage = ImageHolder.from(R.drawable.mapbox_user_stroke_icon)
+                    )
+            puckBearingEnabled = false
+            enabled = true
+            slot = "top"
         }
     }
 
@@ -1348,6 +1372,7 @@ open class MapboxNavigationView(
         }
     }
 
+    @OptIn(ExperimentalPreviewMapboxNavigationAPI::class)
     public fun showRoutePreview(coordinates: ReadableArray, response: CommandResponse) {
         try {
             Log.d("MapboxNavigationStyles", "Showing Route Preview")
@@ -1416,19 +1441,29 @@ open class MapboxNavigationView(
                                 }
                             }
 
-                            hideLocationPuckComponent()
+                            val alternativesMetadata =
+                                    mapboxNavigation.getAlternativeMetadataFor(routes)
+                            val routeCalloutData = routeCalloutApi.setNavigationRoutes(
+                                    routes,
+                                    alternativesMetadata,
+                            )
 
-                            // if (this@MapboxNavigationView.resources.configuration.orientation ==
-                            //                 Configuration.ORIENTATION_LANDSCAPE
-                            // ) {
-                            //     Log.d("MapboxNavigationStyles", "Landscape Following Padding")
-                            //     viewportDataSource.followingPadding = landscapeFollowingPadding
-                            //     viewportDataSource.overviewPadding = landscapeOverviewPadding
-                            // } else {
-                            //     Log.d("MapboxNavigationStyles", "Portrait Following Padding")
-                            //     viewportDataSource.followingPadding = followingPadding
-                            //     viewportDataSource.overviewPadding = overviewPadding
+                            routeCalloutView.renderCallouts(routeCalloutData)
+
+                            // Iterate over each route and its legs to create callouts
+                            // routes.forEach { route ->
+                            //     route.directionsRoute.legs()?.forEachIndexed { index, leg ->
+                            //         val legDuration = leg.duration()
+                            //         val legDistance = leg.distance()
+                            //         val calloutData = RouteCalloutResult(
+                            //                 "Leg ${index + 1}",
+                            //                 "Duration: ${legDuration} seconds, Distance: ${legDistance} meters"
+                            //         )
+                            //         routeCalloutView.renderCallouts(listOf(calloutData))
+                            //     }
                             // }
+
+                            hideLocationPuckComponent()
 
                             viewportDataSource.onRouteChanged(routes.first())
                             viewportDataSource.evaluate()
@@ -1457,17 +1492,6 @@ open class MapboxNavigationView(
 
             initLocationPuckComponent()
 
-            // if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
-            // {
-            //     Log.d("MapboxNavigationStyles", "Landscape Following Padding")
-            //     viewportDataSource.followingPadding = landscapeFollowingPadding
-            //     viewportDataSource.overviewPadding = landscapeOverviewPadding
-            // } else {
-            //     Log.d("MapboxNavigationStyles", "Portrait Following Padding")
-            //     viewportDataSource.followingPadding = followingPadding
-            //     viewportDataSource.overviewPadding = overviewPadding
-            // }
-
             // remove the route reference from camera position evaluations
             viewportDataSource.clearRouteData()
             viewportDataSource.evaluate()
@@ -1484,8 +1508,19 @@ open class MapboxNavigationView(
         visibleArea?.let { area ->
             Log.d("MapboxNavigationViewportUpdate", "Visible Area: $area")
             if (screenWidth > 0 && screenHeight > 0) {
-                Log.d("MapboxNavigationViewportUpdate", "Screen Width: $screenWidth, Screen Height: $screenHeight")
-                val padding = calculatePadding(area.top, area.left, area.bottom, area.right, screenWidth, screenHeight)
+                Log.d(
+                        "MapboxNavigationViewportUpdate",
+                        "Screen Width: $screenWidth, Screen Height: $screenHeight"
+                )
+                val padding =
+                        calculatePadding(
+                                area.top,
+                                area.left,
+                                area.bottom,
+                                area.right,
+                                screenWidth,
+                                screenHeight
+                        )
                 viewportDataSource.overviewPadding = padding
                 viewportDataSource.followingPadding = padding
                 viewportDataSource.evaluate()

@@ -1,5 +1,10 @@
-import { findNodeHandle, LayoutRectangle, TurboModule, ViewProps } from "react-native";
-import { NativeMapboxNavigationViewActual } from "../MapboxNavigationNativeComponent";
+import {
+  findNodeHandle,
+  LayoutRectangle,
+  TurboModule,
+  ViewProps,
+} from 'react-native';
+// import { NativeMapboxNavigationViewActual } from "../MapboxNavigationNativeComponent";
 
 export type NativeArg =
   | string
@@ -13,7 +18,7 @@ export function runNativeMethod<ReturnType = NativeArg>(
   turboModule: TurboModule,
   name: string,
   nativeRef: any,
-  args: NativeArg[]
+  args: NativeArg[],
 ): Promise<ReturnType> {
   const handle = findNodeHandle(nativeRef);
   if (!handle) {
@@ -58,7 +63,7 @@ export type Point = [number, number];
 
 export type ErrorState = {
   message: string;
-}
+};
 
 export type CameraOptions = {
   center: LocationState;
@@ -95,32 +100,32 @@ export type Props = ViewProps & {
    * Whether the MapboxNavigation component is in dark mode.
    */
   isDarkMode?: boolean;
-  
+
   /**
    * Whether free drive is enabled.
    */
   freeDrive?: boolean;
-  
+
   /**
    * The styles to apply to the MapboxNavigation component.
    */
   viewStyles?: object;
-  
+
   /**
    * This event is triggered when the MapboxNavigation component is ready.
    */
   onReady?: () => void;
-  
+
   /**
    * This event is triggered when the user cancels navigation.
    */
   onCancelNavigation?: () => void;
-  
+
   /**
    * This event is triggered when an error occurs.
    */
   onError?: (error: ErrorState) => void;
-  
+
   /**
    * This event is triggered when the user's route progress has changed.
    */
@@ -144,5 +149,5 @@ export type Props = ViewProps & {
   /**
    * @private Experimental support for custom MapView instances
    */
-  _nativeImpl?: NativeMapboxNavigationViewActual;
+  _nativeImpl?: any;
 };

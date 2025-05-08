@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { NativeMethods } from 'react-native';
-import type { LayoutRectangle, NativeSyntheticEvent } from 'react-native';
-import { ErrorState, LocationState, NativeArg, Props, RouteProgress, VisibleArea } from './utils';
+import type { LayoutRectangle, NativeMethods, NativeSyntheticEvent } from 'react-native';
+import { NativeArg, Props } from './utils';
+import { MapboxNavigationViewProps } from './MapboxNavigationViewSpec';
 declare const MapboxNavigation_base: {
     new (...args: any[]): {
         _turboModule: import("react-native").TurboModule;
@@ -37,69 +37,48 @@ declare const MapboxNavigation_base: {
         UNSAFE_componentWillUpdate?(nextProps: object, nextState: Readonly<{}>, nextContext: any): void;
     };
 } & {
-    new (props: Props | Readonly<Props>): React.PureComponent<Props, {}, any>;
+    new (props: Props): React.PureComponent<Props, {}, any>;
     new (props: Props, context: any): React.PureComponent<Props, {}, any>;
     contextType?: React.Context<any> | undefined;
 };
 declare class MapboxNavigation extends MapboxNavigation_base {
-    static defaultProps: Props;
-    _nativeRef?: NativeMapboxNavigationRefType;
+    private _nativeRef?;
     state: {
         isReady: boolean | null;
         width: number;
         height: number;
     };
-    constructor(props: Props);
-    componentDidMount(): void;
-    componentWillUnmount(): void;
-    UNSAFE_componentWillReceiveProps(nextProps: Props): void;
-    _setNativeRef(nativeRef: NativeMapboxNavigationRefType | null): void;
-    setNativeProps(props: NativeProps): void;
+    _onReady: () => void;
+    _onArrive: () => void;
+    _onRouteProgressChange: (event: {
+        nativeEvent: {
+            distanceTraveled: number;
+            durationRemaining: number;
+            fractionTraveled: number;
+            distanceRemaining: number;
+            legIndex: number;
+            currentStepIndex: number;
+            currentStepProgress: number;
+            route: Record<string, any>;
+        };
+    }) => void;
+    _onCancelNavigation: () => void;
+    _onError: (event: {
+        nativeEvent: {
+            message: string;
+        };
+    }) => void;
+    _onLocationChange: (event: {
+        nativeEvent: {
+            longitude: number;
+            latitude: number;
+        };
+    }) => void;
+    _onLayout: (e: NativeSyntheticEvent<{
+        layout: LayoutRectangle;
+    }>) => void;
+    _setNativeRef: (instance: (Component<MapboxNavigationViewProps> & Readonly<NativeMethods>) | null) => void;
     _runNative<ReturnType>(methodName: string, args?: NativeArg[]): Promise<ReturnType>;
-    startNavigation(): Promise<void>;
-    stopNavigation(): Promise<void>;
-    startFreeDrive(): Promise<void>;
-    stopFreeDrive(): Promise<void>;
-    showRoutePreview(coordinates: LocationState[]): Promise<void>;
-    hideRoutePreview(): Promise<void>;
-    setCameraZoom(zoomLevel: number): Promise<void>;
-    setVisibleArea(visibleArea: VisibleArea): Promise<void>;
-    getCameraZoom(): Promise<number>;
-    _decodePayload<T>(payload: T | string): T;
-    _onReady(): void;
-    _onCancelNavigation(): void;
-    _onError(e: NativeSyntheticEvent<{
-        type: string;
-        payload: ErrorState | string;
-    }>): void;
-    _onArrive(): void;
-    _onLocationChange(e: NativeSyntheticEvent<{
-        payload: LocationState | string;
-    }>): void;
-    _onRouteProgressChange(e: NativeSyntheticEvent<{
-        payload: RouteProgress | string;
-    }>): void;
-    _onLayout(e: NativeSyntheticEvent<{
-        layout: LayoutRectangle;
-    }>): void;
-    render(): JSX.Element;
+    render(): React.JSX.Element;
 }
-type NativeProps = Omit<Props, 'onLayout' | 'onRouteProgressChange' | 'onError' | 'onLocationChange'> & {
-    onLayout?: (event: NativeSyntheticEvent<{
-        layout: LayoutRectangle;
-    }>) => void;
-    onRouteProgressChange?: (event: NativeSyntheticEvent<{
-        type: string;
-        payload: RouteProgress | string;
-    }>) => void;
-    onError?: (event: NativeSyntheticEvent<{
-        type: string;
-        payload: ErrorState | string;
-    }>) => void;
-    onLocationChange?: (event: NativeSyntheticEvent<{
-        type: string;
-        payload: LocationState | string;
-    }>) => void;
-};
-type NativeMapboxNavigationRefType = Component<NativeProps> & Readonly<NativeMethods>;
 export default MapboxNavigation;

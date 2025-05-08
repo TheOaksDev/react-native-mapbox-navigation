@@ -1,6 +1,7 @@
-import MapboxCoreNavigation
 import MapboxDirections
-import MapboxNavigation
+import MapboxNavigationCore
+import MapboxNavigationUIKit
+import React
 
 // // adapted from https://pspdfkit.com/blog/2017/native-view-controllers-and-react-native/ and https://github.com/mslabenyak/react-native-mapbox-navigation/blob/master/ios/Mapbox/MapboxNavigationView.swift
 extension UIView {
@@ -55,7 +56,8 @@ class CustomEmptyView: ContainerViewController {
     }
 }
 
-class MapboxNavigationView: UIView, NavigationViewControllerDelegate, NavigationServiceDelegate {
+@objc(MapboxNavigationView)
+class MapboxNavigationView: UIView, NavigationViewControllerDelegate {
     weak var navViewController: NavigationViewController?
     var embedded: Bool
     var embedding: Bool
@@ -121,151 +123,99 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Navigation
         let originWaypoint = Waypoint(coordinate: CLLocationCoordinate2D(latitude: origin[1] as! CLLocationDegrees, longitude: origin[0] as! CLLocationDegrees))
         let destinationWaypoint = Waypoint(coordinate: CLLocationCoordinate2D(latitude: destination[1] as! CLLocationDegrees, longitude: destination[0] as! CLLocationDegrees))
 
-        // let options = NavigationRouteOptions(waypoints: [originWaypoint, destinationWaypoint])
         let options = NavigationRouteOptions(waypoints: [originWaypoint, destinationWaypoint], profileIdentifier: .automobileAvoidingTraffic)
 
-        Directions.shared.calculate(options) { [weak self] (_, result) in
-            guard let strongSelf = self, let parentVC = strongSelf.parentViewController else {
-                return
-            }
+        // Create navigation provider
+        let navigationProvider = MapboxNavigationProvider(coreConfig: CoreConfig())
+        
+        Task {
+            do {
+                let routesResponse = try await navigationProvider.routingProvider().calculateRoutes(options: options).value
+                
+                guard let parentVC = self.parentViewController else { return }
+                
+                // Create navigation options
+                let navigationOptions = NavigationOptions(
+                    mapboxNavigation: navigationProvider.mapboxNavigation,
+                    voiceController: navigationProvider.routeVoiceController,
+                    eventsManager: navigationProvider.eventsManager(),
+                    styles: [NightStyle()],
+                    predictiveCacheManager: navigationProvider.predictiveCacheManager
+                )
+                
+                // Create navigation view controller
+                let vc = NavigationViewController(
+                    navigationRoutes: routesResponse,
+                    navigationOptions: navigationOptions
+                )
 
-            switch result {
-            case let .failure(error):
-                strongSelf.onError!(["message": error.localizedDescription])
-            case let .success(response):
-                guard let weakSelf = self else {
-                    return
-                }
+//                if !self.mapStyleURL.isEmpty {
+//                    vc.navigationMapView?.mapView.mapboxMap.style.styleManager.setStyleURIForUri(self.mapStyleURL)
+//                }
 
-                let bottomBanner = CustomEmptyView()
-                let topBanner = CustomEmptyView()
+                vc.showsReportFeedback = !self.hideReportFeedback
+                vc.showsEndOfRouteFeedback = self.showsEndOfRouteFeedback
 
-                let navigationService = MapboxNavigationService(routeResponse: response, routeIndex: 0, routeOptions: options, simulating: strongSelf.shouldSimulateRoute ? .always : .never)
-                let navigationOptions = NavigationOptions(navigationService: navigationService)
-                let vc = NavigationViewController(for: response, routeIndex: 0, routeOptions: options, navigationOptions: navigationOptions)
-
-                if !strongSelf.mapStyleURL.isEmpty {
-                    vc.navigationMapView?.mapView.mapboxMap.style.styleManager.setStyleURIForUri(strongSelf.mapStyleURL)
-                }
-
-                vc.showsReportFeedback = !strongSelf.hideReportFeedback
-                vc.showsEndOfRouteFeedback = strongSelf.showsEndOfRouteFeedback
-
-                if strongSelf.isCarplayView {
+                if self.isCarplayView {
                     vc.floatingButtonsPosition = .topTrailing
                 }
                 
-                StatusView.appearance().isHidden = strongSelf.isCarplayView
-                TopBannerView.appearance().isHidden = strongSelf.isCarplayView
-                BottomBannerView.appearance().isHidden = strongSelf.isCarplayView
-                InstructionsBannerView.appearance().isHidden = strongSelf.isCarplayView
-                NextBannerView.appearance().isHidden = strongSelf.isCarplayView
-                StepInstructionsView.appearance().isHidden = strongSelf.isCarplayView
-                FloatingButton.appearance().isHidden = strongSelf.isCarplayView
-                NavigationSettings.shared.voiceMuted = strongSelf.mute
+                // Hide UI elements for CarPlay
+                StatusView.appearance().isHidden = self.isCarplayView
+                TopBannerView.appearance().isHidden = self.isCarplayView
+                BottomBannerView.appearance().isHidden = self.isCarplayView
+                InstructionsBannerView.appearance().isHidden = self.isCarplayView
+                NextBannerView.appearance().isHidden = self.isCarplayView
+                StepInstructionsView.appearance().isHidden = self.isCarplayView
+                FloatingButton.appearance().isHidden = self.isCarplayView
+                
+                //NavigationSettings.shared.voiceMuted = self.mute
 
-                vc.delegate = strongSelf
-                navigationService.delegate = strongSelf
+                vc.delegate = self
 
                 parentVC.addChild(vc)
-                strongSelf.addSubview(vc.view)
-                vc.view.frame = strongSelf.bounds
+                self.addSubview(vc.view)
+                vc.view.frame = self.bounds
                 vc.didMove(toParent: parentVC)
-                strongSelf.navViewController = vc
+                self.navViewController = vc
+                
+                self.embedding = false
+                self.embedded = true
+                
+            } catch {
+                self.onError?(["message": error.localizedDescription])
+                self.embedding = false
             }
-
-            strongSelf.embedding = false
-            strongSelf.embedded = true
         }
     }
 
-    func navigationViewController(_: NavigationViewController, didUpdate progress: RouteProgress, with location: CLLocation, rawLocation _: CLLocation) {
-        print("Did Update...")
+    // MARK: - NavigationViewControllerDelegate
+    
+    func navigationViewController(_ navigationViewController: NavigationViewController, didUpdate progress: RouteProgress, with location: CLLocation, rawLocation: CLLocation) {
         let routeInfo = extractRouteInfo(from: progress)
 
         onLocationChange?(["longitude": location.coordinate.longitude, "latitude": location.coordinate.latitude])
-        onRouteProgressChange?(["distanceTraveled": progress.distanceTraveled,
-                                "durationRemaining": progress.durationRemaining,
-                                "fractionTraveled": progress.fractionTraveled,
-                                "distanceRemaining": progress.distanceRemaining,
-                                "legIndex": progress.legIndex,
-                                "currentStepIndex": progress.currentLegProgress.stepIndex,
-                                "currentStepProgress": progress.currentLegProgress.currentStepProgress.distanceRemaining,
-                                "route": routeInfo])
+        onRouteProgressChange?([
+            "distanceTraveled": progress.distanceTraveled,
+            "durationRemaining": progress.durationRemaining,
+            "fractionTraveled": progress.fractionTraveled,
+            "distanceRemaining": progress.distanceRemaining,
+            "legIndex": progress.legIndex,
+            "currentStepIndex": progress.currentLegProgress.stepIndex,
+            "currentStepProgress": progress.currentLegProgress.currentStepProgress.distanceRemaining,
+            "route": routeInfo
+        ])
     }
 
-    func navigationViewControllerDidDismiss(_: NavigationViewController, byCanceling canceled: Bool) {
-        if !canceled {
-            return
+    func navigationViewControllerDidDismiss(_ navigationViewController: NavigationViewController, byCanceling canceled: Bool) {
+        if canceled {
+            onCancelNavigation?(["message": ""])
         }
-        onCancelNavigation?(["message": ""])
     }
 
-    func navigationViewController(_: NavigationViewController, didArriveAt _: Waypoint) -> Bool {
+    func navigationViewController(_ navigationViewController: NavigationViewController, didArriveAt waypoint: Waypoint) -> Bool {
         onArrive?(["message": ""])
         return true
-    }
-
-    // MARK: - NavigationServiceDelegate Methods
-
-    func navigationServiceDidChangeAuthorization(_: NavigationService, didChangeAuthorizationFor _: CLAuthorizationStatus) {
-        // Default implementation
-        print("navigationServiceDidChangeAuthorization called")
-    }
-
-    func navigationService(_ service: NavigationService, shouldDiscard location: CLLocation) -> Bool {
-        // Default implementation
-        print("navigationService:shouldDiscard called")
-        let shouldDiscard = navViewController?.navigationService(service, shouldDiscard: location)
-        return shouldDiscard!
-    }
-
-    func navigationService(_: NavigationService, didUpdateAlternatives _: [Route], removedAlternatives _: [Route]) {
-        // Default implementation
-        print("navigationService:didUpdateAlternatives called")
-        // self.navViewController?.navigationService(service, didUpdateAlternatives: updatedAlternatives, removedAlternatives: removedAlternatives)
-    }
-
-    func navigationService(_ service: NavigationService, didUpdate progress: RouteProgress, with location: CLLocation, rawLocation: CLLocation) {
-        // Default implementation
-        print("navigationService:didUpdate called")
-        navViewController?.navigationService(service, didUpdate: progress, with: location, rawLocation: rawLocation)
-    }
-
-    func navigationService(_ service: NavigationService, didPassSpokenInstructionPoint instruction: SpokenInstruction, routeProgress: RouteProgress) {
-        // Default implementation
-        print("navigationService:didPassSpokenInstructionPoint called")
-        navViewController?.navigationService(service, didPassSpokenInstructionPoint: instruction, routeProgress: routeProgress)
-    }
-
-    func navigationService(_ service: NavigationService, shouldRerouteFrom location: CLLocation) -> Bool {
-        // Default implementation
-        print("navigationService:shouldRerouteFrom called")
-        let shouldReroute = navViewController?.navigationService(service, shouldRerouteFrom: location)
-        return shouldReroute!
-    }
-
-    func navigationService(_ service: NavigationService, willRerouteFrom location: CLLocation?) {
-        // Default implementation
-        print("navigationService:willRerouteFrom called")
-        navViewController?.navigationService(service, willRerouteFrom: location!)
-    }
-
-    func navigationService(_ service: NavigationService, didRerouteAlong route: Route, at location: CLLocation?, proactive: Bool) {
-        // Default implementation
-        print("navigationService:didRerouteAlong called")
-        navViewController?.navigationService(service, didRerouteAlong: route, at: location!, proactive: proactive)
-    }
-    
-    func navigationService(_ service: NavigationService, didPassVisualInstructionPoint instruction: VisualInstructionBanner, routeProgress: RouteProgress) {
-        print("MapboxNavigationView didPassVisualInstructionPoint")
-
-        if isCarplayView {
-            // skip updating views; this should pass data to RN skope
-            // so that Carplay Manager methods can be called to update Carplay UI
-        } else {
-            navViewController?.navigationService(service, didPassVisualInstructionPoint: instruction, routeProgress: routeProgress)
-        }
     }
 
     private func applyStyles() {
@@ -575,9 +525,9 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Navigation
 
                         for component in instruction.primaryInstruction.components {
                             if case let .image(imageRepresentation, _) = component {
-                                if let url = imageRepresentation.imageURL(scale: nil, format: .png) {
-                                    instructionInfo["imageURL"] = url.absoluteString
-                                }
+//                                if let url = imageRepresentation.imageURL(scale: nil, format: .png) {
+//                                    instructionInfo["imageURL"] = url.absoluteString
+//                                }
                             }
                         }
 

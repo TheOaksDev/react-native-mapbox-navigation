@@ -1,5 +1,4 @@
-import { LayoutRectangle, TurboModule, ViewProps } from "react-native";
-import { NativeMapboxNavigationViewActual } from "../MapboxNavigationNativeComponent";
+import { LayoutRectangle, TurboModule, ViewProps } from 'react-native';
 export type NativeArg = string | number | boolean | null | {
     [k: string]: NativeArg;
 } | NativeArg[];
@@ -99,5 +98,5 @@ export type Props = ViewProps & {
     /**
      * @private Experimental support for custom MapView instances
      */
-    _nativeImpl?: NativeMapboxNavigationViewActual;
+    _nativeImpl?: any;
 };

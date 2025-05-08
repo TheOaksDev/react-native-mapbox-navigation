@@ -1,10 +1,14 @@
 @objc(MapboxNavigationManager)
 class MapboxNavigationManager: RCTViewManager {
-  override func view() -> UIView! {
-    return MapboxNavigationView();
-  }
+    override func view() -> UIView! {
+        return MapboxNavigationView()
+    }
 
-  override static func requiresMainQueueSetup() -> Bool {
-    return true
-  }
+    override static func requiresMainQueueSetup() -> Bool {
+        return true
+    }
+    
+    override func constantsToExport() -> [AnyHashable : Any]! {
+        return [:]
+    }
 }
