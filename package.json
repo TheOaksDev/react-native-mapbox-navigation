@@ -1,7 +1,7 @@
 {
   "name": "@homee/react-native-mapbox-navigation",
   "title": "React Native Mapbox Navigation",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Smart Mapbox turn-by-turn routing based on real-time traffic for React Native.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -33,7 +33,11 @@
     "ios",
     "android",
     "src",
-    "index.js"
+    "index.js",
+    "*.podspec",
+    "package.json",
+    "*.md",
+    "LICENSE"
   ],
   "peerDependencies": {
     "react": ">=16.6.1",

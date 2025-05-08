@@ -12,7 +12,7 @@
   "dependencies": {
     "react": "18.3.1",
     "react-native": "0.75.5",
-    "react-native-mapbox-navigation": "https://github.com/TheOaksDev/react-native-mapbox-navigation.git#native-component-fix"
+    "react-native-mapbox-navigation": "https://github.com/TheOaksDev/react-native-mapbox-navigation.git#332dded4af83c2992bdf1417e893781e8f496cd9"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

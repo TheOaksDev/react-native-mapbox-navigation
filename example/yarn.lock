@@ -2834,7 +2834,7 @@ __metadata:
     prettier: 2.8.8
     react: 18.3.1
     react-native: 0.75.5
-    react-native-mapbox-navigation: "https://github.com/TheOaksDev/react-native-mapbox-navigation.git#native-component-fix"
+    react-native-mapbox-navigation: "https://github.com/TheOaksDev/react-native-mapbox-navigation.git#332dded4af83c2992bdf1417e893781e8f496cd9"
     react-test-renderer: 18.3.1
     typescript: 5.0.4
   languageName: unknown
@@ -7815,13 +7815,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-mapbox-navigation@https://github.com/TheOaksDev/react-native-mapbox-navigation.git#native-component-fix":
-  version: 2.0.1
-  resolution: "react-native-mapbox-navigation@https://github.com/TheOaksDev/react-native-mapbox-navigation.git#commit=697e408584da00fb23f09a6ef1d05181cf7e1575"
+"react-native-mapbox-navigation@https://github.com/TheOaksDev/react-native-mapbox-navigation.git#332dded4af83c2992bdf1417e893781e8f496cd9":
+  version: 2.0.2
+  resolution: "react-native-mapbox-navigation@https://github.com/TheOaksDev/react-native-mapbox-navigation.git#commit=332dded4af83c2992bdf1417e893781e8f496cd9"
   peerDependencies:
     react: ">=16.6.1"
     react-native: ">=0.59.9"
-  checksum: b22190e3f71150ee9301e92f3a57f08536359fc50efa8d56eda369b1010273f1b90e08fb259cc4e124e8d27705d181a10acaaf4bd1405fcfd815b207e98452af
+  checksum: 274249016e7f54856a9051afc908c02c2690ef477adafd848f250408cd77c69a2d6eb8aca9ccd9e4e4defb98cee05987057a01ad1947619e521275fce20052f7
   languageName: node
   linkType: hard
 
