@@ -7,6 +7,30 @@ PODS:
   - hermes-engine (0.75.5):
     - hermes-engine/Pre-built (= 0.75.5)
   - hermes-engine/Pre-built (0.75.5)
+  - MapboxCommon (23.11.4)
+  - MapboxCoreMaps (10.19.2):
+    - MapboxCommon (~> 23.11)
+  - MapboxCoreNavigation (2.18.4):
+    - MapboxDirections (~> 2.12)
+    - MapboxNavigationNative (< 205.0.0, >= 204.0.1)
+  - MapboxDirections (2.14.0):
+    - Polyline (~> 5.0)
+    - Turf (~> 2.8.0)
+  - MapboxMaps (10.19.4):
+    - MapboxCommon (= 23.11.4)
+    - MapboxCoreMaps (= 10.19.2)
+    - MapboxMobileEvents (= 2.0.0)
+    - Turf (= 2.8.0)
+  - MapboxMobileEvents (2.0.0)
+  - MapboxNavigation (2.18.4):
+    - MapboxCoreNavigation (= 2.18.4)
+    - MapboxMaps (~> 10.17)
+    - MapboxSpeech (~> 2.0)
+    - Solar-dev (~> 3.0)
+  - MapboxNavigationNative (204.1.0):
+    - MapboxCommon (~> 23.9)
+  - MapboxSpeech (2.1.1)
+  - Polyline (5.1.0)
   - RCT-Folly (2024.01.01.00):
     - boost
     - DoubleConversion
@@ -1237,6 +1261,9 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - react-native-mapbox-navigation (2.0.3):
+    - MapboxNavigation (~> 2.18.1)
+    - React-Core
   - React-nativeconfig (0.75.5)
   - React-NativeModulesApple (0.75.5):
     - glog
@@ -1498,6 +1525,8 @@ PODS:
     - React-perflogger (= 0.75.5)
     - React-utils (= 0.75.5)
   - SocketRocket (0.7.0)
+  - Solar-dev (3.0.1)
+  - Turf (2.8.0)
   - Yoga (0.0.0)
 
 DEPENDENCIES:
@@ -1538,6 +1567,7 @@ DEPENDENCIES:
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
+  - react-native-mapbox-navigation (from `../node_modules/react-native-mapbox-navigation`)
   - React-nativeconfig (from `../node_modules/react-native/ReactCommon`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
@@ -1568,7 +1598,19 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - MapboxCommon
+    - MapboxCoreMaps
+    - MapboxCoreNavigation
+    - MapboxDirections
+    - MapboxMaps
+    - MapboxMobileEvents
+    - MapboxNavigation
+    - MapboxNavigationNative
+    - MapboxSpeech
+    - Polyline
     - SocketRocket
+    - Solar-dev
+    - Turf
 
 EXTERNAL SOURCES:
   boost:
@@ -1642,6 +1684,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   React-microtasksnativemodule:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
+  react-native-mapbox-navigation:
+    :path: "../node_modules/react-native-mapbox-navigation"
   React-nativeconfig:
     :path: "../node_modules/react-native/ReactCommon"
   React-NativeModulesApple:
@@ -1704,6 +1748,16 @@ SPEC CHECKSUMS:
   fmt: 4c2741a687cc09f0634a2e2c72a838b99f1ff120
   glog: 69ef571f3de08433d766d614c73a9838a06bf7eb
   hermes-engine: c9fe5870af65876125fdbbf833071b6f329db30d
+  MapboxCommon: cc47fafe3fe5408ca49240aa80fa64f27f275711
+  MapboxCoreMaps: 35685edba03e44468aed57c3dfd7f8795edafda8
+  MapboxCoreNavigation: a4fa72bdb987dc9ab55615878299bf571f83a2b1
+  MapboxDirections: 3d468327d3e2ac52ae1be2176004976580cf6fd9
+  MapboxMaps: f87023cf0d72b180b40ea0b6fb4b2d7db6b73b71
+  MapboxMobileEvents: d044b9edbe0ec7df60f6c2c9634fe9a7f449266b
+  MapboxNavigation: b80fc4d8317c38fe01aa2aff2d365d6d9f7ad62a
+  MapboxNavigationNative: 2667fa3783d7e5196def8d7cf9e6fdafd87b7ef9
+  MapboxSpeech: cd25ef99c3a3d2e0da72620ff558276ea5991a77
+  Polyline: 2a1f29f87f8d9b7de868940f4f76deb8c678a5b1
   RCT-Folly: 34124ae2e667a0e5f0ea378db071d27548124321
   RCTDeprecation: 3abf1129f54dbf292986302277f62ad01f7af1b2
   RCTRequired: 67f606e1be40dbb827898c23d9eaee3562b087d1
@@ -1733,6 +1787,7 @@ SPEC CHECKSUMS:
   React-logger: 15a50e9e2fabe5d684cdd818ff1cbd2285bab1f0
   React-Mapbuffer: 4e75c08e9fa46f2cf19edf62dc3a660535efe7e8
   React-microtasksnativemodule: 561ec5488150ce6b021b2631c2bd0a897cec027b
+  react-native-mapbox-navigation: b4b1676685fa9e02177c4b16965fd172b259910a
   React-nativeconfig: c7743aabd506fc9756e2bc3225b44f6a6f4490c9
   React-NativeModulesApple: 007ac9ffc5e43040a7e0d70c04ad4a8b845a832c
   React-perflogger: 46ce3b295add69087b7c5ff325b55a6c7af204fc
@@ -1760,8 +1815,10 @@ SPEC CHECKSUMS:
   ReactCodegen: cab4b6fc4f1e049e565fefa4cbf6829e900da1ba
   ReactCommon: 2a02ad6348566d64bb1429aa952f0e4466a51a9d
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
+  Solar-dev: 4612dc9878b9fed2667d23b327f1d4e54e16e8d0
+  Turf: aa2ede4298009639d10db36aba1a7ebaad072a5e
   Yoga: a7bfab58243c025cd29201015103b072841f4f0d
 
-PODFILE CHECKSUM: fa623fb97bc53765cac6666afac9620e4e927b3b
+PODFILE CHECKSUM: f3c212d96c4165adb64bccac74d929172f18eae3
 
 COCOAPODS: 1.16.2

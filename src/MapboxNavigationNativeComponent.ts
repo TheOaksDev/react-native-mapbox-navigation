@@ -1,4 +1,4 @@
-import type { HostComponent, LayoutRectangle, ViewProps } from 'react-native';
+import type { HostComponent, ViewProps } from 'react-native';
 import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNativeComponent';
 import {
   type RouteProgress,
@@ -6,46 +6,148 @@ import {
   type ErrorState,
   type CameraOptions,
 } from './utils';
-import { DirectEventHandler } from 'react-native/Libraries/Types/CodegenTypes';
-
-// see https://github.com/rnmapbox/maps/wiki/FabricOptionalProp
-export type UnsafeMixed<T> = T;
-export type OptionalProp<T> = UnsafeMixed<T>;
+import {
+  DirectEventHandler,
+  Double,
+} from 'react-native/Libraries/Types/CodegenTypes';
 
 type OnRouteProgressChangeEventType = {
   type: string;
-  payload: string;
+  payload: {
+    distanceTraveled: Double;
+    durationRemaining: Double;
+    fractionTraveled: Double;
+    distanceRemaining: Double;
+    legIndex: Double;
+    currentStepIndex: Double;
+    currentStepProgress: Double;
+  };
 };
 
 type OnErrorEventType = {
   type: string;
-  payload: string;
+  payload: {
+    message: string;
+  };
 };
 
 type OnLocationChangeEventType = {
   type: string;
-  payload: string;
+  payload: {
+    latitude: Double;
+    longitude: Double;
+  };
 };
 
 type OnLayoutEventType = {
-  layout: LayoutRectangle;
+  type: string;
+  payload: {
+    layout: {
+      x: Double;
+      y: Double;
+      width: Double;
+      height: Double;
+    };
+  };
+};
+
+type OnReadyEventType = {
+  type: string;
+  payload: boolean;
+};
+
+type OnCancelNavigationEventType = {
+  type: string;
+  payload: boolean;
+};
+
+type OnArriveEventType = {
+  type: string;
+  payload: boolean;
 };
 
 export interface NativeProps extends ViewProps {
-  defaultMapOptions?: OptionalProp<CameraOptions>;
-  origin?: OptionalProp<LocationState>;
-  destination?: OptionalProp<LocationState>;
-  isCarplayView?: OptionalProp<boolean>;
-  freeDriveEnabled?: OptionalProp<boolean>;
-  viewStyles?: OptionalProp<object>;
-  shouldSimulateRoute?: OptionalProp<boolean>;
-  isDarkMode?: OptionalProp<boolean>;
-  onReady?: () => void;
-  onCancelNavigation?: () => void;
+  defaultMapOptions?: {
+    center: {
+      latitude: Double;
+      longitude: Double;
+    };
+    zoom: Double;
+  };
+  origin?: {
+    latitude: Double;
+    longitude: Double;
+  };
+  destination?: {
+    latitude: Double;
+    longitude: Double;
+  };
+  freeDriveEnabled?: boolean;
+  viewStyles?: {
+    banner?: {
+      topBannerBackgroundColor?: string;
+      bottomBannerBackgroundColor?: string;
+      instructionBannerBackgroundColor?: string;
+      stepInstructionsBackgroundColor?: string;
+      nextBannerBackgroundColor?: string;
+    };
+    maneuver?: {
+      primaryColor?: string;
+      secondaryColor?: string;
+      primaryColorHighlighted?: string;
+      secondaryColorHighlighted?: string;
+      textColor?: string;
+    };
+    primary?: {
+      normalTextColor?: string;
+    };
+    secondary?: {
+      normalTextColor?: string;
+    };
+    distance?: {
+      unitTextColor?: string;
+      valueTextColor?: string;
+    };
+    floatingButtons?: {
+      tintColor?: string;
+      backgroundColor?: string;
+      borderColor?: string;
+    };
+    timeRemaining?: {
+      trafficUnknownColor?: string;
+      trafficLowColor?: string;
+      trafficModerateColor?: string;
+      trafficHeavyColor?: string;
+      trafficSevereColor?: string;
+    };
+    cancelButton?: {
+      textColor?: string;
+    };
+    dismissButton?: {
+      backgroundColor?: string;
+      textColor?: string;
+    };
+    statusView?: {
+      backgroundColor?: string;
+      textColor?: string;
+    };
+    separatorView?: {
+      backgroundColor?: string;
+    };
+    footer?: {
+      totalDistanceTextColor?: string;
+      totalDurationTextColor?: string;
+      arrivalTimeTextColor?: string;
+    };
+  };
+  shouldSimulateRoute?: boolean;
+  isDarkMode?: boolean;
+  onReady?: DirectEventHandler<OnReadyEventType>;
+  onCancelNavigation?: DirectEventHandler<OnCancelNavigationEventType>;
   onLayout?: DirectEventHandler<OnLayoutEventType>;
   onRouteProgressChange?: DirectEventHandler<OnRouteProgressChangeEventType>;
   onError?: DirectEventHandler<OnErrorEventType>;
-  onArrive?: () => void;
+  onArrive?: DirectEventHandler<OnArriveEventType>;
   onLocationChange?: DirectEventHandler<OnLocationChangeEventType>;
 }
 
@@ -69,7 +171,15 @@ type OnLocationChangeEventTypeActual = {
 };
 
 type OnLayoutEventTypeActual = {
-  layout: LayoutRectangle;
+  type: string;
+  payload: {
+    layout: {
+      x: Double;
+      y: Double;
+      width: Double;
+      height: Double;
+    };
+  };
 };
 
 export type NativeMapboxNavigationViewActual = HostComponent<

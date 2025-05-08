@@ -1,6 +1,6 @@
 {
-  "name": "@homee/react-native-mapbox-navigation",
-  "title": "React Native Mapbox Navigation",
+  "name": "@theoaksdev/react-native-mapbox-navigation",
+  "title": "React Native Mapbox Navigation (Forked)",
   "version": "2.0.3",
   "description": "Smart Mapbox turn-by-turn routing based on real-time traffic for React Native.",
   "main": "dist/index.js",
@@ -13,8 +13,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/homeeondemand/react-native-mapbox-navigation.git",
-    "baseUrl": "https://github.com/homeeondemand/react-native-mapbox-navigation.git"
+    "url": "git+https://github.com/TheOaksDev/react-native-mapbox-navigation.git",
+    "baseUrl": "https://github.com/TheOaksDev/react-native-mapbox-navigation.git"
   },
   "keywords": [
     "react-native",
@@ -25,9 +25,9 @@
   "licenseFilename": "LICENSE",
   "readmeFilename": "README.md",
   "bugs": {
-    "url": "https://github.com/homeeondemand/react-native-mapbox-navigation/issues"
+    "url": "https://github.com/TheOaksDev/react-native-mapbox-navigation/issues"
   },
-  "homepage": "https://github.com/homeeondemand/react-native-mapbox-navigation#readme",
+  "homepage": "https://github.com/TheOaksDev/react-native-mapbox-navigation#readme",
   "files": [
     "dist",
     "ios",
@@ -40,17 +40,22 @@
     "LICENSE"
   ],
   "peerDependencies": {
-    "react": ">=16.6.1",
-    "react-native": ">=0.59.9"
+    "react": ">=18.3.1",
+    "react-native": ">=0.75.5"
   },
   "devDependencies": {
     "@mdx-js/mdx": "^3.0.0",
     "@types/react": "18.2.0",
     "ejs": "^3.1.3",
     "prettier": "2.7.1",
-    "react": "18.2.0",
+    "react": "18.3.1",
     "react-docgen": "rnmapbox/react-docgen#rnmapbox-dist-react-docgen-v6",
-    "react-native": "0.73.0-rc.4",
+    "react-native": "0.75.5",
     "typescript": "5.1.3"
+  },
+  "codegenConfig": {
+    "name": "MapboxNavigationSpecs",
+    "type": "components",
+    "jsSrcsDir": "src"
   }
 }
