@@ -1,7 +1,7 @@
 {
   "name": "@homee/react-native-mapbox-navigation",
   "title": "React Native Mapbox Navigation",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Smart Mapbox turn-by-turn routing based on real-time traffic for React Native.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -28,6 +28,13 @@
     "url": "https://github.com/homeeondemand/react-native-mapbox-navigation/issues"
   },
   "homepage": "https://github.com/homeeondemand/react-native-mapbox-navigation#readme",
+  "files": [
+    "dist",
+    "ios",
+    "android",
+    "src",
+    "index.js"
+  ],
   "peerDependencies": {
     "react": ">=16.6.1",
     "react-native": ">=0.59.9"

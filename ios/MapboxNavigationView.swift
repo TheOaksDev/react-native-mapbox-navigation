@@ -55,6 +55,7 @@ class CustomEmptyView: ContainerViewController {
     }
 }
 
+@objc(MapboxNavigationView)
 class MapboxNavigationView: UIView, NavigationViewControllerDelegate, NavigationServiceDelegate {
     weak var navViewController: NavigationViewController?
     var embedded: Bool
