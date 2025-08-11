@@ -1,5 +1,5 @@
-import { LayoutRectangle, TurboModule, ViewProps } from "react-native";
-import { NativeMapboxNavigationViewActual } from "../MapboxNavigationNativeComponent";
+import { LayoutRectangle, TurboModule, ViewProps } from 'react-native';
+import { NativeMapboxNavigationViewActual } from '../typings';
 export type NativeArg = string | number | boolean | null | {
     [k: string]: NativeArg;
 } | NativeArg[];

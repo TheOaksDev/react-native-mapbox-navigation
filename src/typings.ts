@@ -1,4 +1,4 @@
-import { LayoutRectangle } from "react-native";
+import { HostComponent, LayoutRectangle } from 'react-native';
 
 /** @type {[number, number]}
  * Provide an array with longitude and latitude [$longitude, $latitude]
@@ -80,6 +80,8 @@ type ComponentStyle = {
     arrivalTimeTextColor?: string;
   };
 };
+
+export type NativeMapboxNavigationViewActual = HostComponent<any>;
 
 export interface IMapboxNavigationProps {
   origin: Coordinate;

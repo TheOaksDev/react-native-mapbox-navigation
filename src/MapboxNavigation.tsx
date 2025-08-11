@@ -1,322 +1,323 @@
-// import React, { useRef, useImperativeHandle, forwardRef } from "react";
-// import { requireNativeComponent, StyleSheet } from "react-native";
-
-// const MapboxNavigation = forwardRef((props, ref) => {
-//   const nativeRef = useRef();
-
-//   useImperativeHandle(ref, () => ({
-//     customMethod: () => {
-//       if (nativeRef.current) {
-//         nativeRef.current.setNativeProps({ command: "customMethod" });
-//       }
-//     },
-//   }));
-
-//   return (
-//     <RNMapboxNavigation ref={nativeRef} style={styles.container} {...props} />
-//   );
-// });
-
-// const RNMapboxNavigation = requireNativeComponent(
-//   "MapboxNavigation",
-//   MapboxNavigation
-// );
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//   },
-// });
-
-import React, { Component } from 'react';
-import { NativeMethods, StyleSheet, View } from 'react-native';
-import type {
-  HostComponent,
-  LayoutRectangle,
-  NativeSyntheticEvent,
-} from 'react-native';
-import NativeBridgeComponent from './NativeBridgeComponent';
-import MapboxNavigationViewModule from './NativeMapboxNavigationViewModule';
+import React, {
+  useEffect,
+  useImperativeHandle,
+  forwardRef,
+  useRef,
+} from 'react';
 import {
-  ErrorState,
-  isFunction,
-  LocationState,
-  NativeArg,
-  Props,
-  RouteProgress,
-  VisibleArea,
-} from './utils';
-import NativeMapboxNavigationView, {
-  type NativeMapboxNavigationViewActual,
-} from './MapboxNavigationNativeComponent';
+  View,
+  requireNativeComponent,
+  type ViewProps,
+  type ViewStyle,
+  type NativeSyntheticEvent,
+  findNodeHandle,
+} from 'react-native';
 
-const styles = StyleSheet.create({
-  matchParent: {
-    height: '100%',
-    width: '100%',
-  },
-});
-
-class MapboxNavigation extends NativeBridgeComponent(
-  React.PureComponent<Props>,
-  MapboxNavigationViewModule,
-) {
-  static defaultProps: Props = {
-    origin: {
-      latitude: 0,
-      longitude: 0,
-    },
-    destination: {
-      latitude: 0,
-      longitude: 0,
-    },
-    shouldSimulateRoute: false,
-    isCarplayView: false,
-    isDarkMode: false,
-    freeDrive: false,
-    defaultCameraOptions: { // US Center (Kansas)
-      center: {
-        latitude: 39.8283,
-        longitude: -98.5795,
-      },
-      zoom: 5,
-    },
+export interface MapboxNavigationProps extends ViewProps {
+  testID?: string;
+  style?: ViewStyle;
+  origin: {
+    latitude: number;
+    longitude: number;
   };
-
-  _nativeRef?: NativeMapboxNavigationRefType;
-
-  state: {
-    isReady: boolean | null;
-    width: number;
-    height: number;
+  destination: {
+    latitude: number;
+    longitude: number;
   };
-
-  constructor(props: Props) {
-    super(props);
-
-    this.state = {
-      isReady: null,
-      width: 0,
-      height: 0,
+  shouldSimulateRoute?: boolean;
+  isDarkMode?: boolean;
+  freeDrive?: boolean;
+  mute?: boolean;
+  defaultCameraOptions?: {
+    center: {
+      latitude: number;
+      longitude: number;
     };
-
-    this._onReady = this._onReady.bind(this);
-    this._onArrive = this._onArrive.bind(this);
-    this._onRouteProgressChange = this._onRouteProgressChange.bind(this);
-    this._onCancelNavigation = this._onCancelNavigation.bind(this);
-    this._onError = this._onError.bind(this);
-    this._onLocationChange = this._onLocationChange.bind(this);
-    this._onLayout = this._onLayout.bind(this);
-  }
-
-  componentDidMount() {
-    //this._setHandledMapChangedEvents(this.props);
-  }
-
-  componentWillUnmount() {
-    // this._onDebouncedRegionWillChange.clear();
-    // this._onDebouncedRegionDidChange.clear();
-    // this.logger.stop();
-  }
-
-  UNSAFE_componentWillReceiveProps(nextProps: Props) {
-    //this._setHandledMapChangedEvents(nextProps);
-  }
-
-  _setNativeRef(nativeRef: NativeMapboxNavigationRefType | null) {
-    if (nativeRef != null) {
-      this._nativeRef = nativeRef;
-      super._runPendingNativeMethods(nativeRef);
-    }
-  }
-
-  setNativeProps(props: NativeProps) {
-    if (this._nativeRef) {
-      this._nativeRef.setNativeProps(props);
-    }
-  }
-
-  _runNative<ReturnType>(
-    methodName: string,
-    args: NativeArg[] = [],
-  ): Promise<ReturnType> {
-    return super._runNativeMethod<typeof RNMapboxNavigationView, ReturnType>(
-      methodName,
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore TODO: fix types
-      this._nativeRef as HostComponent<NativeProps> | undefined,
-      args,
-    );
-  }
-
-  async startNavigation(): Promise<void> {
-    await this._runNative<void>('startNavigation', []);
-  }
-
-  async stopNavigation(): Promise<void> {
-    await this._runNative<void>('stopNavigation', []);
-  }
-
-  async startFreeDrive(): Promise<void> {
-    await this._runNative<void>('startFreeDrive', []);
-  }
-
-  async stopFreeDrive(): Promise<void> {
-    await this._runNative<void>('stopFreeDrive', []);
-  }
-
-  async showRoutePreview(coordinates: LocationState[]): Promise<void> {
-    await this._runNative<void>('showRoutePreview', [coordinates]);
-  }
-
-  async hideRoutePreview(): Promise<void> {
-    await this._runNative<void>('hideRoutePreview', []);
-  }
-
-  async setCameraZoom(zoomLevel: number): Promise<void> {
-    await this._runNative<void>('setCameraZoom', [zoomLevel]);
-  }
-
-  async setVisibleArea(visibleArea: VisibleArea): Promise<void> {
-    await this._runNative<void>('setVisibleArea', [visibleArea]);
-  }
-
-  async getCameraZoom(): Promise<number> {
-    return await this._runNative<number>('getCameraZoom', []);
-  }
-
-  _decodePayload<T>(payload: T | string): T {
-    if (typeof payload === 'string') {
-      return JSON.parse(payload);
-    } else {
-      return payload;
-    }
-  }
-
-  _onReady() {
-    if (isFunction(this.props.onReady)) {
-      this.props.onReady();
-    }
-  }
-
-  _onCancelNavigation() {
-    if (isFunction(this.props.onCancelNavigation)) {
-      this.props.onCancelNavigation();
-    }
-  }
-
-  _onError(
-    e: NativeSyntheticEvent<{ type: string; payload: ErrorState | string }>,
-  ) {
-    if (isFunction(this.props.onError)) {
-      this.props.onError(this._decodePayload(e.nativeEvent.payload));
-    }
-  }
-
-  _onArrive() {
-    if (isFunction(this.props.onArrive)) {
-      this.props.onArrive();
-    }
-  }
-
-  _onLocationChange(
-    e: NativeSyntheticEvent<{ payload: LocationState | string }>,
-  ) {
-    if (isFunction(this.props.onLocationChange)) {
-      this.props.onLocationChange(this._decodePayload(e.nativeEvent.payload));
-    }
-  }
-
-  _onRouteProgressChange(
-    e: NativeSyntheticEvent<{ payload: RouteProgress | string }>,
-  ) {
-    if (isFunction(this.props.onRouteProgressChange)) {
-      this.props.onRouteProgressChange(
-        this._decodePayload(e.nativeEvent.payload),
-      );
-    }
-  }
-
-  _onLayout(e: NativeSyntheticEvent<{ layout: LayoutRectangle }>) {
-    this.setState({
-      isReady: true,
-      width: e.nativeEvent.layout.width,
-      height: e.nativeEvent.layout.height,
-    });
-    if (isFunction(this.props.onLayout)) {
-      this.props.onLayout(e.nativeEvent.layout);
-    }
-  }
-
-  render() {
-    //return <NativeMapboxNavigationView {...this.props} {...callbacks} />;
-
-    const props = {
-      ...this.props,
-      style: styles.matchParent,
+    zoom: number;
+  };
+  viewStyles?: {
+    banner?: {
+      topBannerBackgroundColor?: string;
+      bottomBannerBackgroundColor?: string;
+      instructionBannerBackgroundColor?: string;
+      stepInstructionsBackgroundColor?: string;
+      nextBannerBackgroundColor?: string;
     };
-
-    const callbacks = {
-      ref: (nativeRef: NativeMapboxNavigationRefType | null) =>
-        this._setNativeRef(nativeRef),
-      onReady: this._onReady,
-      onCancelNavigation: this._onCancelNavigation,
-      onError: this._onError,
-      onArrive: this._onArrive,
-      onLocationChange: this._onLocationChange,
-      onLayout: this._onLayout,
-      onRouteProgressChange: this._onRouteProgressChange,
+    maneuver?: {
+      primaryColor?: string;
+      secondaryColor?: string;
+      primaryColorHighlighted?: string;
+      secondaryColorHighlighted?: string;
+      textColor?: string;
     };
-    let mapView = null;
-    if (this.state.isReady) {
-      if (props._nativeImpl) {
-        mapView = <props._nativeImpl {...props} {...callbacks} />;
-      } else {
-        mapView = <NativeMapboxNavigationView {...props} {...callbacks} />;
-      }
-    }
-    return (
-      <View
-        onLayout={this._onLayout}
-        style={this.props.style}
-        testID={mapView ? undefined : this.props.testID}
-      >
-        {mapView}
-      </View>
-    );
-  }
-}
-
-type NativeProps = Omit<
-  Props,
-  'onLayout' | 'onRouteProgressChange' | 'onError' | 'onLocationChange'
-> & {
-  onLayout?: (
-    event: NativeSyntheticEvent<{
-      layout: LayoutRectangle;
-    }>,
+    primary?: {
+      normalTextColor?: string;
+    };
+    secondary?: {
+      normalTextColor?: string;
+    };
+    distance?: {
+      unitTextColor?: string;
+      valueTextColor?: string;
+    };
+    floatingButtons?: {
+      tintColor?: string;
+      backgroundColor?: string;
+      borderColor?: string;
+    };
+    timeRemaining?: {
+      trafficUnknownColor?: string;
+      trafficLowColor?: string;
+      trafficModerateColor?: string;
+      trafficHeavyColor?: string;
+      trafficSevereColor?: string;
+    };
+    cancelButton?: {
+      textColor?: string;
+    };
+    dismissButton?: {
+      backgroundColor?: string;
+      textColor?: string;
+    };
+    statusView?: {
+      backgroundColor?: string;
+      textColor?: string;
+    };
+    separatorView?: {
+      backgroundColor?: string;
+    };
+    footer?: {
+      totalDistanceTextColor?: string;
+      totalDurationTextColor?: string;
+      arrivalTimeTextColor?: string;
+    };
+  };
+  onReady?: () => void;
+  onCancelNavigation?: () => void;
+  onError?: (event: NativeSyntheticEvent<{ message: string }>) => void;
+  onArrive?: () => void;
+  onLocationChange?: (
+    event: NativeSyntheticEvent<{ latitude: number; longitude: number }>,
   ) => void;
   onRouteProgressChange?: (
     event: NativeSyntheticEvent<{
-      type: string;
-      payload: RouteProgress | string;
+      distanceTraveled: number;
+      durationRemaining: number;
+      fractionTraveled: number;
+      distanceRemaining: number;
+      legIndex: number;
+      currentStepIndex: number;
+      currentStepProgress: number;
     }>,
   ) => void;
-  onError?: (
-    event: NativeSyntheticEvent<{ type: string; payload: ErrorState | string }>,
+  onLayout?: (
+    event: NativeSyntheticEvent<{ layout: { width: number; height: number } }>,
   ) => void;
-  onLocationChange?: (
-    event: NativeSyntheticEvent<{
-      type: string;
-      payload: LocationState | string;
-    }>,
-  ) => void;
-};
+}
 
-type NativeMapboxNavigationRefType = Component<NativeProps> &
-  Readonly<NativeMethods>;
+export interface MapboxNavigationRef {
+  startNavigation: () => Promise<void>;
+  stopNavigation: () => Promise<void>;
+  startFreeDrive: () => Promise<void>;
+  stopFreeDrive: () => Promise<void>;
+  showRoutePreview: (
+    coordinates: Array<{ latitude: number; longitude: number }>,
+  ) => Promise<void>;
+  hideRoutePreview: () => Promise<void>;
+  setCameraZoom: (zoomLevel: number) => Promise<void>;
+  setVisibleArea: (visibleArea: {
+    top: number;
+    left: number;
+    bottom: number;
+    right: number;
+  }) => Promise<void>;
+  getCameraZoom: () => Promise<number>;
+}
 
-const RNMapboxNavigationView =
-  NativeMapboxNavigationView as NativeMapboxNavigationViewActual;
+// Define the native module interface
+interface RNMapboxNavigationModule {
+  startNavigation: (node: number) => Promise<void>;
+  stopNavigation: (node: number) => Promise<void>;
+  startFreeDrive: (node: number) => Promise<void>;
+  stopFreeDrive: (node: number) => Promise<void>;
+  showRoutePreview: (
+    node: number,
+    coordinates: Array<{ latitude: number; longitude: number }>,
+  ) => Promise<void>;
+  hideRoutePreview: (node: number) => Promise<void>;
+  setCameraZoom: (node: number, zoomLevel: number) => Promise<void>;
+  setVisibleArea: (
+    node: number,
+    visibleArea: { top: number; left: number; bottom: number; right: number },
+  ) => Promise<void>;
+  getCameraZoom: (node: number) => Promise<number>;
+}
+
+// Require the native component
+const RNMapboxNavigationView = requireNativeComponent<MapboxNavigationProps>(
+  'MapboxNavigationView',
+);
+
+const MapboxNavigation = forwardRef<MapboxNavigationRef, MapboxNavigationProps>(
+  (
+    {
+      style,
+      testID = 'MapboxNavigationView',
+      origin,
+      destination,
+      shouldSimulateRoute = false,
+      isDarkMode = false,
+      freeDrive = false,
+      mute = false,
+      defaultCameraOptions = {
+        center: {
+          latitude: 39.8283,
+          longitude: -98.5795,
+        },
+        zoom: 5,
+      },
+      viewStyles,
+      onReady,
+      onCancelNavigation,
+      onError,
+      onArrive,
+      onLocationChange,
+      onRouteProgressChange,
+      onLayout,
+    }: MapboxNavigationProps,
+    ref: React.Ref<MapboxNavigationRef>,
+  ) => {
+    const viewRef = useRef(null);
+    const nativeModule = useRef<RNMapboxNavigationModule | null>(null);
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        startNavigation: async () => {
+          if (!nativeModule.current || !viewRef.current) {
+            throw new Error('View or native module not found');
+          }
+          const node = findNodeHandle(viewRef.current);
+          if (!node) {
+            throw new Error('View node not found');
+          }
+          return nativeModule.current.startNavigation(node);
+        },
+        stopNavigation: async () => {
+          if (!nativeModule.current || !viewRef.current) {
+            throw new Error('View or native module not found');
+          }
+          const node = findNodeHandle(viewRef.current);
+          if (!node) {
+            throw new Error('View node not found');
+          }
+          return nativeModule.current.stopNavigation(node);
+        },
+        startFreeDrive: async () => {
+          if (!nativeModule.current || !viewRef.current) {
+            throw new Error('View or native module not found');
+          }
+          const node = findNodeHandle(viewRef.current);
+          if (!node) {
+            throw new Error('View node not found');
+          }
+          return nativeModule.current.startFreeDrive(node);
+        },
+        stopFreeDrive: async () => {
+          if (!nativeModule.current || !viewRef.current) {
+            throw new Error('View or native module not found');
+          }
+          const node = findNodeHandle(viewRef.current);
+          if (!node) {
+            throw new Error('View node not found');
+          }
+          return nativeModule.current.stopFreeDrive(node);
+        },
+        showRoutePreview: async (coordinates) => {
+          if (!nativeModule.current || !viewRef.current) {
+            throw new Error('View or native module not found');
+          }
+          const node = findNodeHandle(viewRef.current);
+          if (!node) {
+            throw new Error('View node not found');
+          }
+          return nativeModule.current.showRoutePreview(node, coordinates);
+        },
+        hideRoutePreview: async () => {
+          if (!nativeModule.current || !viewRef.current) {
+            throw new Error('View or native module not found');
+          }
+          const node = findNodeHandle(viewRef.current);
+          if (!node) {
+            throw new Error('View node not found');
+          }
+          return nativeModule.current.hideRoutePreview(node);
+        },
+        setCameraZoom: async (zoomLevel) => {
+          if (!nativeModule.current || !viewRef.current) {
+            throw new Error('View or native module not found');
+          }
+          const node = findNodeHandle(viewRef.current);
+          if (!node) {
+            throw new Error('View node not found');
+          }
+          return nativeModule.current.setCameraZoom(node, zoomLevel);
+        },
+        setVisibleArea: async (visibleArea) => {
+          if (!nativeModule.current || !viewRef.current) {
+            throw new Error('View or native module not found');
+          }
+          const node = findNodeHandle(viewRef.current);
+          if (!node) {
+            throw new Error('View node not found');
+          }
+          return nativeModule.current.setVisibleArea(node, visibleArea);
+        },
+        getCameraZoom: async () => {
+          if (!nativeModule.current || !viewRef.current) {
+            throw new Error('View or native module not found');
+          }
+          const node = findNodeHandle(viewRef.current);
+          if (!node) {
+            throw new Error('View node not found');
+          }
+          return nativeModule.current.getCameraZoom(node);
+        },
+      }),
+      [],
+    );
+
+    useEffect(() => {
+      // Initialize the native module reference
+      // You'll need to create the corresponding native module
+      // nativeModule.current = NativeModules.RNMapboxNavigationModule as RNMapboxNavigationModule;
+    }, []);
+
+    return (
+      <View style={style}>
+        <RNMapboxNavigationView
+          testID={testID}
+          ref={viewRef}
+          style={style}
+          origin={origin}
+          destination={destination}
+          shouldSimulateRoute={shouldSimulateRoute}
+          isDarkMode={isDarkMode}
+          freeDrive={freeDrive}
+          mute={mute}
+          defaultCameraOptions={defaultCameraOptions}
+          viewStyles={viewStyles}
+          onReady={onReady}
+          onCancelNavigation={onCancelNavigation}
+          onError={onError}
+          onArrive={onArrive}
+          onLocationChange={onLocationChange}
+          onRouteProgressChange={onRouteProgressChange}
+          onLayout={onLayout}
+        />
+      </View>
+    );
+  },
+);
 
 export default MapboxNavigation;

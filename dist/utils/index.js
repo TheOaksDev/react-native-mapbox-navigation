@@ -1,4 +1,4 @@
-import { findNodeHandle } from "react-native";
+import { findNodeHandle, } from 'react-native';
 export function runNativeMethod(turboModule, name, nativeRef, args) {
     const handle = findNodeHandle(nativeRef);
     if (!handle) {
