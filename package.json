@@ -1,11 +1,12 @@
 {
-  "name": "@theoaksdev/react-native-mapbox-navigation",
+  "name": "react-native-mapbox-navigation",
   "title": "React Native Mapbox Navigation (Forked)",
   "version": "2.0.3",
   "description": "Smart Mapbox turn-by-turn routing based on real-time traffic for React Native.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "source": "src/index",
+  "private": true,
   "scripts": {
     "generate": "node ./scripts/autogenerate.mjs",
     "prepublishOnly": "tsc",
@@ -32,11 +33,8 @@
     "dist",
     "ios",
     "android",
-    "src",
-    "index.js",
     "*.podspec",
     "package.json",
-    "*.md",
     "LICENSE"
   ],
   "peerDependencies": {

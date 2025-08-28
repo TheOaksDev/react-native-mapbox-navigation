@@ -7,9 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		67F7831A2E5F901A001280C1 /* MapboxNavigationViewModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 67F783182E5F901A001280C1 /* MapboxNavigationViewModule.m */; };
+		67F7831B2E5F901A001280C1 /* MapboxNavigationViewModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67F783192E5F901A001280C1 /* MapboxNavigationViewModule.swift */; };
+		67F7831E2E608E9F001280C1 /* MapboxNavigationViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 67F7831C2E608E9F001280C1 /* MapboxNavigationViewManager.m */; };
+		67F7831F2E608E9F001280C1 /* MapboxNavigationViewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67F7831D2E608E9F001280C1 /* MapboxNavigationViewManager.swift */; };
 		957B881A244753D70058C6C1 /* MapboxNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 957B8816244753D70058C6C1 /* MapboxNavigationView.swift */; };
-		957B881C244753D70058C6C1 /* MapboxNavigationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 957B8818244753D70058C6C1 /* MapboxNavigationManager.m */; };
-		957B881D244753D70058C6C1 /* MapboxNavigationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 957B8819244753D70058C6C1 /* MapboxNavigationManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -26,10 +28,12 @@
 
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libMapboxNavigation.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libMapboxNavigation.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		67F783182E5F901A001280C1 /* MapboxNavigationViewModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MapboxNavigationViewModule.m; sourceTree = "<group>"; };
+		67F783192E5F901A001280C1 /* MapboxNavigationViewModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapboxNavigationViewModule.swift; sourceTree = "<group>"; };
+		67F7831C2E608E9F001280C1 /* MapboxNavigationViewManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MapboxNavigationViewManager.m; sourceTree = "<group>"; };
+		67F7831D2E608E9F001280C1 /* MapboxNavigationViewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapboxNavigationViewManager.swift; sourceTree = "<group>"; };
 		957B8815244753D60058C6C1 /* MapboxNavigation-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MapboxNavigation-Bridging-Header.h"; sourceTree = "<group>"; };
 		957B8816244753D70058C6C1 /* MapboxNavigationView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MapboxNavigationView.swift; sourceTree = "<group>"; };
-		957B8818244753D70058C6C1 /* MapboxNavigationManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MapboxNavigationManager.m; sourceTree = "<group>"; };
-		957B8819244753D70058C6C1 /* MapboxNavigationManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MapboxNavigationManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,8 +58,10 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
-				957B8818244753D70058C6C1 /* MapboxNavigationManager.m */,
-				957B8819244753D70058C6C1 /* MapboxNavigationManager.swift */,
+				67F7831C2E608E9F001280C1 /* MapboxNavigationViewManager.m */,
+				67F7831D2E608E9F001280C1 /* MapboxNavigationViewManager.swift */,
+				67F783182E5F901A001280C1 /* MapboxNavigationViewModule.m */,
+				67F783192E5F901A001280C1 /* MapboxNavigationViewModule.swift */,
 				957B8816244753D70058C6C1 /* MapboxNavigationView.swift */,
 				957B8815244753D60058C6C1 /* MapboxNavigation-Bridging-Header.h */,
 				134814211AA4EA7D00B7C361 /* Products */,
@@ -120,9 +126,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				957B881C244753D70058C6C1 /* MapboxNavigationManager.m in Sources */,
-				957B881D244753D70058C6C1 /* MapboxNavigationManager.swift in Sources */,
+				67F7831E2E608E9F001280C1 /* MapboxNavigationViewManager.m in Sources */,
+				67F7831F2E608E9F001280C1 /* MapboxNavigationViewManager.swift in Sources */,
 				957B881A244753D70058C6C1 /* MapboxNavigationView.swift in Sources */,
+				67F7831A2E5F901A001280C1 /* MapboxNavigationViewModule.m in Sources */,
+				67F7831B2E5F901A001280C1 /* MapboxNavigationViewModule.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

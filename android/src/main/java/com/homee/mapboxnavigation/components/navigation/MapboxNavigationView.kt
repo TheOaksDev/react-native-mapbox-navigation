@@ -3,6 +3,7 @@ package com.homee.mapboxnavigation.components.navigation
 // import android.location.Location
 // import com.mapbox.navigation.base.route.RouterCallback
 // import com.mapbox.navigation.core.replay.ReplayLocationEngine
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
@@ -14,8 +15,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.annotation.RequiresPermission
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -46,6 +49,7 @@ import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.navigation.base.TimeFormat
 import com.mapbox.navigation.base.extensions.applyDefaultNavigationOptions
 import com.mapbox.navigation.base.extensions.applyLanguageAndVoiceUnitOptions
+import com.mapbox.navigation.base.formatter.DistanceFormatterOptions
 import com.mapbox.navigation.base.options.NavigationOptions
 import com.mapbox.navigation.base.route.NavigationRoute
 import com.mapbox.navigation.base.route.NavigationRouterCallback
@@ -216,10 +220,20 @@ open class MapboxNavigationView(
      * You can use [MapboxNavigationProvider] to help create and obtain that instance.
      */
     private lateinit var mapboxNavigation: MapboxNavigation
+    
+    /**
+     * Lifecycle of the MapboxNavigationView.
+     */
     private val lifecycle: MapboxNavigationLifeCycle by lazy { MapboxNavigationLifeCycle() }
     var isInitialized = false
 
     init {
+        // Ensure the FrameLayout fills its parent
+        layoutParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
+        )
+
         // Initialize your view here
         mapboxNavigation =
                 MapboxNavigationProvider.create(NavigationOptions.Builder(context).build())
@@ -277,24 +291,34 @@ open class MapboxNavigationView(
         // lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
         // Cleanup resources
 
-        if (::maneuverApi.isInitialized) {
+        try {
             maneuverApi.cancel()
+        } catch (error: Exception) {
+            Log.e("MapboxNavigationView", "maneuverApi.cancel() error: $error")
         }
 
-        if (::routeLineApi.isInitialized) {
+        try {
             routeLineApi.cancel()
+        } catch (error: Exception) {
+            Log.e("MapboxNavigationView", "routeLineApi.cancel() error: $error")
         }
 
-        if (::routeLineView.isInitialized) {
+        try {
             routeLineView.cancel()
+        } catch (error: Exception) {
+            Log.e("MapboxNavigationView", "routeLineView.cancel() error: $error")
         }
 
-        if (::speechApi.isInitialized) {
+        try {
             speechApi.cancel()
+        } catch (error: Exception) {
+            Log.e("MapboxNavigationView", "speechApi.cancel() error: $error")
         }
 
-        if (::voiceInstructionsPlayer.isInitialized) {
+        try {
             voiceInstructionsPlayer.shutdown()
+        } catch (error: Exception) {
+            Log.e("MapboxNavigationView", "voiceInstructionsPlayer.shutdown() error: $error")
         }
 
         mapboxReplayer.finish()
@@ -364,17 +388,59 @@ open class MapboxNavigationView(
      */
     private lateinit var viewportDataSource: MapboxNavigationViewportDataSource
 
+    /*
+     * Here a distance formatter with default values is being created. The distance
+     * remaining formatter can also come from MapboxNavigation just be sure it is
+     * instantiated and configured first. The formatting options in MapboxNavigation
+     * can be found at: MapboxNavigation::navigationOptions::distanceFormatterOptions
+     */
+    private val distanceFormatterOptions: DistanceFormatterOptions by lazy {
+        DistanceFormatterOptions.Builder(context).build()
+    }
+
     /**
      * Generates updates for the [MapboxManeuverView] to display the upcoming maneuver instructions
      * and remaining distance to the maneuver point.
      */
     private lateinit var maneuverApi: MapboxManeuverApi
+    // private val maneuverApi: MapboxManeuverApi by lazy {
+    //     MapboxManeuverApi(MapboxDistanceFormatter(distanceFormatterOptions))
+    // }
+
+    /*
+     * Define formatter options
+     */
+    private val tripProgressFormatter: TripProgressUpdateFormatter by lazy {
+
+        /* 
+        Here a distance formatter with default values is being created. The distance 
+        remaining formatter can also come from MapboxNavigation just be sure it is
+        instantiated and configured first. The formatting options in MapboxNavigation
+        can be found at: MapboxNavigation::navigationOptions::distanceFormatterOptions
+        */
+        //val distanceFormatterOptions = mapboxNavigation.navigationOptions.distanceFormatterOptions
+
+        /*
+        These are Mapbox formatters being created with default values. You can
+        provide your own custom formatters by implementing the appropriate interface.
+        The expected output of a formatter is a SpannableString that is applied to
+        the view component in MapboxTripProgressView.
+        */
+            TripProgressUpdateFormatter.Builder(context)
+                .distanceRemainingFormatter(DistanceRemainingFormatter(distanceFormatterOptions))
+                .timeRemainingFormatter(TimeRemainingFormatter(context))
+                .estimatedTimeToArrivalFormatter(EstimatedTimeToArrivalFormatter(context))
+                .build()
+    }
 
     /**
      * Generates updates for the [MapboxTripProgressView] that include remaining time and distance
      * to the destination.
      */
-    private lateinit var tripProgressApi: MapboxTripProgressApi
+    //private lateinit var tripProgressApi: MapboxTripProgressApi
+    private val tripProgressApi: MapboxTripProgressApi by lazy {
+        MapboxTripProgressApi(tripProgressFormatter)
+    }
 
     /**
      * Generates updates for the [routeLineView] with the geometries and properties of the routes
@@ -401,12 +467,16 @@ open class MapboxNavigationView(
     private var isVoiceInstructionsMuted = false
         set(value) {
             field = value
-            if (value) {
-                binding.soundButton.muteAndExtend(BUTTON_ANIMATION_DURATION)
-                voiceInstructionsPlayer.volume(SpeechVolume(0f))
-            } else {
-                binding.soundButton.unmuteAndExtend(BUTTON_ANIMATION_DURATION)
-                voiceInstructionsPlayer.volume(SpeechVolume(1f))
+            try {
+                if (value) {
+                    binding.soundButton.muteAndExtend(BUTTON_ANIMATION_DURATION)
+                    voiceInstructionsPlayer.volume(SpeechVolume(0f))
+                } else {
+                    binding.soundButton.unmuteAndExtend(BUTTON_ANIMATION_DURATION)
+                    voiceInstructionsPlayer.volume(SpeechVolume(1f))
+                }
+            } catch (error: Exception) {
+                Log.e("MapboxNavigationView", "isVoiceInstructionsMuted error: $error")
             }
         }
 
@@ -415,12 +485,19 @@ open class MapboxNavigationView(
      * possible, downloads a synthesized audio file that can be played back to the driver.
      */
     private lateinit var speechApi: MapboxSpeechApi
+    // private val speechApi: MapboxSpeechApi by lazy {
+    //     MapboxSpeechApi(context, Locale.US.language)
+    // }
+
 
     /**
      * Plays the synthesized audio files with upcoming maneuver instructions or uses an on-device
      * Text-To-Speech engine to communicate the message to the driver.
      */
     private lateinit var voiceInstructionsPlayer: MapboxVoiceInstructionsPlayer
+    // private val voiceInstructionsPlayer: MapboxVoiceInstructionsPlayer by lazy {
+    //     MapboxVoiceInstructionsPlayer(context, Locale.US.language)
+    // }
 
     /** Observes when a new voice instruction should be played. */
     private val voiceInstructionsObserver = VoiceInstructionsObserver { voiceInstructions ->
@@ -435,18 +512,26 @@ open class MapboxNavigationView(
             MapboxNavigationConsumer<Expected<SpeechError, SpeechValue>> { expected ->
                 expected.fold(
                         { error ->
-                            // play the instruction via fallback text-to-speech engine
-                            voiceInstructionsPlayer.play(
-                                    error.fallback,
-                                    voiceInstructionsPlayerCallback
-                            )
+                            try {
+                                // play the instruction via fallback text-to-speech engine
+                                voiceInstructionsPlayer.play(
+                                        error.fallback,
+                                        voiceInstructionsPlayerCallback
+                                )
+                            } catch (error: Exception) {
+                                Log.e("MapboxNavigationView", "speechCallback error: $error")
+                            }
                         },
                         { value ->
-                            // play the sound file from the external generator
-                            voiceInstructionsPlayer.play(
-                                    value.announcement,
-                                    voiceInstructionsPlayerCallback
-                            )
+                            try {
+                                // play the sound file from the external generator
+                                voiceInstructionsPlayer.play(
+                                        value.announcement,
+                                        voiceInstructionsPlayerCallback
+                                )
+                            } catch (error: Exception) {
+                                Log.e("MapboxNavigationView", "speechCallback error: $error")
+                            }
                         }
                 )
             }
@@ -529,19 +614,21 @@ open class MapboxNavigationView(
         maneuvers.fold(
                 { error -> Toast.makeText(context, error.errorMessage, Toast.LENGTH_SHORT).show() },
                 {
-                    if (!isCarplayView) {
-                        binding.maneuverView.visibility = View.VISIBLE
-                        // binding.maneuverView.updatePrimaryManeuverTextVisibility(R.style.PrimaryManeuverTextAppearance.)
-                        // binding.maneuverView.updateSecondaryManeuverVisibility(R.style.ManeuverTextAppearance)
-                        // binding.maneuverView.updateSubManeuverViewVisibility(R.style.ManeuverTextAppearance)
-                        // binding.maneuverView.updateStepDistanceTextAppearance(R.style.StepDistanceRemainingAppearance)
-                        binding.maneuverView.renderManeuvers(maneuvers)
-                    }
+                    binding.maneuverView.isVisible = true
+                    //binding.tripProgressView.isVisible = true
+                    binding.stop.isVisible = true
+                    binding.recenter.isVisible = true
+                    binding.routeOverview.isVisible = true
+                    binding.soundButton.isVisible = true
+                    binding.maneuverView.renderManeuvers(maneuvers)
                 }
         )
 
         // update bottom trip progress summary
-        binding.tripProgressView.render(tripProgressApi.getTripProgress(routeProgress))
+        val updatedTripProgress = tripProgressApi.getTripProgress(routeProgress)
+        Log.d("MapboxNavigationView", "Updating Trip Progress View: $updatedTripProgress")
+        // binding.tripProgressView.render(updatedTripProgress)
+        //binding.tripProgressView.render(tripProgressApi.getTripProgress(routeProgress))
 
         val properties: WritableMap = WritableNativeMap()
         properties.putDouble("distanceTraveled", routeProgress.distanceTraveled.toDouble())
@@ -638,7 +725,7 @@ open class MapboxNavigationView(
 
     override fun requestLayout() {
         super.requestLayout()
-        post(measureAndLayout)
+        //post(measureAndLayout)
     }
 
     private val measureAndLayout = Runnable {
@@ -648,13 +735,13 @@ open class MapboxNavigationView(
         )
         Log.d(
                 "MapboxNavigationView",
-                "Layout Left ${left} Top ${top} Right ${right} Bottom ${bottom}"
+                "Layout Left ${left} Top ${top} Right ${right} Bottom ${bottom} Screen Height ${screenHeight} Screen Width ${screenWidth} Measure Height ${height} Measure Width ${width}"
         )
 
         // update the visible area
-        //updateViewportPadding(top, left, bottom, right, width, height)
+        updateViewportPadding()
 
-        layout(left, top, right, bottom)
+        layout(left, top, screenWidth, screenHeight)
     }
 
     private fun setCameraPositionToOrigin() {
@@ -741,13 +828,13 @@ open class MapboxNavigationView(
         )
         navigationCamera.registerNavigationCameraStateChangeObserver { navigationCameraState ->
             // shows/hide the recenter button depending on the camera state
-            when (navigationCameraState) {
-                NavigationCameraState.TRANSITION_TO_FOLLOWING, NavigationCameraState.FOLLOWING ->
-                    binding.recenter.visibility = View.INVISIBLE
-                NavigationCameraState.TRANSITION_TO_OVERVIEW,
-                NavigationCameraState.OVERVIEW,
-                NavigationCameraState.IDLE -> binding.recenter.visibility = View.VISIBLE
-            }
+            // when (navigationCameraState) {
+            //     NavigationCameraState.TRANSITION_TO_FOLLOWING, NavigationCameraState.FOLLOWING ->
+            //         binding.recenter.isVisible = false
+            //     NavigationCameraState.TRANSITION_TO_OVERVIEW,
+            //     NavigationCameraState.OVERVIEW,
+            //     NavigationCameraState.IDLE -> binding.recenter.isVisible = true
+            // }
         }
         // set the padding values depending on screen orientation and visible view layout
         // if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -797,47 +884,26 @@ open class MapboxNavigationView(
 
         // if origin is null, destination is null or we are forcing free drive
         // then do not start any navigation related setup; only setup free drive
-        if (!isFreeDrive) {
-            // make sure to use the same DistanceFormatterOptions across different features
-            val distanceFormatterOptions =
-                    mapboxNavigation.navigationOptions.distanceFormatterOptions
+        // if (!isFreeDrive) {
+        //     // initialize maneuver api that feeds the data to the top banner maneuver view
+        //     maneuverApi = MapboxManeuverApi(MapboxDistanceFormatter(distanceFormatterOptions))
 
-            // initialize maneuver api that feeds the data to the top banner maneuver view
-            maneuverApi = MapboxManeuverApi(MapboxDistanceFormatter(distanceFormatterOptions))
+        //     // initialize bottom progress view
+        //     //tripProgressApi = MapboxTripProgressApi(tripProgressFormatter)
 
-            // initialize bottom progress view
-            tripProgressApi =
-                    MapboxTripProgressApi(
-                            TripProgressUpdateFormatter.Builder(context)
-                                    .distanceRemainingFormatter(
-                                            DistanceRemainingFormatter(distanceFormatterOptions)
-                                    )
-                                    .timeRemainingFormatter(TimeRemainingFormatter(context))
-                                    .percentRouteTraveledFormatter(
-                                            PercentDistanceTraveledFormatter()
-                                    )
-                                    .estimatedTimeToArrivalFormatter(
-                                            EstimatedTimeToArrivalFormatter(
-                                                    context,
-                                                    TimeFormat.NONE_SPECIFIED
-                                            )
-                                    )
-                                    .build()
-                    )
+        //     // initialize voice instructions api and the voice instruction player
+        //     speechApi = MapboxSpeechApi(context, Locale.US.language)
+        //     voiceInstructionsPlayer = MapboxVoiceInstructionsPlayer(context, Locale.US.language)
 
-            // initialize voice instructions api and the voice instruction player
-            speechApi = MapboxSpeechApi(context, Locale.US.language)
-            voiceInstructionsPlayer = MapboxVoiceInstructionsPlayer(context, Locale.US.language)
-
-            // initRouteLineComponent()
-            setCameraPositionToOrigin()
-        }
+        //     // initRouteLineComponent()
+        //     setCameraPositionToOrigin()
+        // }
 
         initRouteLineComponent()
         startLocationTracking()
         mapboxNavigation.startTripSession()
         setCameraPositionToFollowUser()
-        updateViewportPadding()
+        //updateViewportPadding()
 
         val properties: WritableMap = WritableNativeMap()
         properties.putString("message", "Ready Event")
@@ -878,7 +944,7 @@ open class MapboxNavigationView(
         locationComponentPlugin.updateSettings {
             locationPuck =
                     LocationPuck2D(
-                            bearingImage = ImageHolder.from(R.drawable.mapbox_navigation_puck_icon),
+                            bearingImage = ImageHolder.from(R.drawable.marker_driver),
                     )
             puckBearingEnabled = true
             enabled = true
@@ -918,6 +984,15 @@ open class MapboxNavigationView(
 
         // Handle Trip Progress Card Styles
         setTripProgressStyles()
+
+        // update stop image tint / background color
+        if (isDarkMode) {
+            binding.stop.setBackgroundResource(R.drawable.rounded_button_dark)
+            //binding.stop.setColorFilter(ContextCompat.getColor(context, R.color.DarkTextColor))
+        } else {
+            binding.stop.setBackgroundResource(R.drawable.rounded_button_light)
+            //binding.stop.setColorFilter(ContextCompat.getColor(context, R.color.LightTextColor))
+        }
 
         // Handle Action Button Styles
         // setActionButtonStyles()
@@ -992,38 +1067,52 @@ open class MapboxNavigationView(
 
     private fun setTripProgressStyles() {
         val tripProgressViewOptions = TripProgressViewOptions.Builder()
-        if (isDarkMode) {
-            tripProgressViewOptions.backgroundColor(R.color.DarkBackgroundColor)
-            val darkColorStateList =
-                    ContextCompat.getColorStateList(context, R.color.LightBackgroundColor5dp)
-            tripProgressViewOptions.distanceRemainingIconTint(darkColorStateList)
-            tripProgressViewOptions.estimatedArrivalTimeIconTint(darkColorStateList)
-            tripProgressViewOptions.distanceRemainingTextAppearance(
-                    R.style.DarkProgressViewTextAppearance
-            )
-            tripProgressViewOptions.estimatedArrivalTimeTextAppearance(
-                    R.style.DarkProgressViewTextAppearance
-            )
-            tripProgressViewOptions.timeRemainingTextAppearance(
-                    R.style.DarkProgressViewTextAppearance
-            )
-        } else {
-            tripProgressViewOptions.backgroundColor(R.color.LightBackgroundColor)
-            val lightColorStateList =
-                    ContextCompat.getColorStateList(context, R.color.DarkBackgroundColor5dp)
-            tripProgressViewOptions.distanceRemainingIconTint(lightColorStateList)
-            tripProgressViewOptions.estimatedArrivalTimeIconTint(lightColorStateList)
-            tripProgressViewOptions.distanceRemainingTextAppearance(
-                    R.style.LightProgressViewTextAppearance
-            )
-            tripProgressViewOptions.estimatedArrivalTimeTextAppearance(
-                    R.style.LightProgressViewTextAppearance
-            )
-            tripProgressViewOptions.timeRemainingTextAppearance(
-                    R.style.LightProgressViewTextAppearance
-            )
-        }
-        binding.tripProgressView.updateOptions(tripProgressViewOptions.build())
+        tripProgressViewOptions.backgroundColor(R.color.LightBackgroundColor2dp)
+        val lightTextColor =
+            ContextCompat.getColorStateList(context, R.color.LightTextColor)
+        tripProgressViewOptions.distanceRemainingIconTint(lightTextColor)
+        tripProgressViewOptions.estimatedArrivalTimeIconTint(lightTextColor)
+        tripProgressViewOptions.distanceRemainingTextAppearance(
+            R.style.LightProgressViewTextAppearance
+        )
+        tripProgressViewOptions.estimatedArrivalTimeTextAppearance(
+            R.style.LightProgressViewTextAppearance
+        )
+        tripProgressViewOptions.timeRemainingTextAppearance(
+            R.style.LightProgressViewTextAppearance
+        )
+        // if (isDarkMode) {
+        //     tripProgressViewOptions.backgroundColor(R.color.DarkBackgroundColor)
+        //     val darkColorStateList =
+        //             ContextCompat.getColorStateList(context, R.color.LightBackgroundColor5dp)
+        //     tripProgressViewOptions.distanceRemainingIconTint(darkColorStateList)
+        //     tripProgressViewOptions.estimatedArrivalTimeIconTint(darkColorStateList)
+        //     tripProgressViewOptions.distanceRemainingTextAppearance(
+        //             R.style.DarkProgressViewTextAppearance
+        //     )
+        //     tripProgressViewOptions.estimatedArrivalTimeTextAppearance(
+        //             R.style.DarkProgressViewTextAppearance
+        //     )
+        //     tripProgressViewOptions.timeRemainingTextAppearance(
+        //             R.style.DarkProgressViewTextAppearance
+        //     )
+        // } else {
+        //     tripProgressViewOptions.backgroundColor(R.color.LightBackgroundColor)
+        //     val lightColorStateList =
+        //             ContextCompat.getColorStateList(context, R.color.DarkBackgroundColor5dp)
+        //     tripProgressViewOptions.distanceRemainingIconTint(lightColorStateList)
+        //     tripProgressViewOptions.estimatedArrivalTimeIconTint(lightColorStateList)
+        //     tripProgressViewOptions.distanceRemainingTextAppearance(
+        //             R.style.LightProgressViewTextAppearance
+        //     )
+        //     tripProgressViewOptions.estimatedArrivalTimeTextAppearance(
+        //             R.style.LightProgressViewTextAppearance
+        //     )
+        //     tripProgressViewOptions.timeRemainingTextAppearance(
+        //             R.style.LightProgressViewTextAppearance
+        //     )
+        // }
+        //binding.tripProgressView.updateOptions(tripProgressViewOptions.build())
     }
 
     private fun setManeuverStyles() {
@@ -1160,6 +1249,21 @@ open class MapboxNavigationView(
             sendErrorToReact("No route found")
             return
         }
+
+        binding.soundButton.isVisible = true
+        binding.routeOverview.isVisible = true
+        binding.maneuverView.isVisible = true
+        //binding.tripProgressView.isVisible = true
+        binding.stop.isVisible = true
+        binding.recenter.isVisible = true
+
+        // update stop source to be light or dark based on isDarkMode
+        if (isDarkMode) {
+            binding.stop.setImageDrawable(AppCompatResources.getDrawable(context, R.drawable.cancel_dark))
+        } else {
+            binding.stop.setImageDrawable(AppCompatResources.getDrawable(context, R.drawable.cancel_light))
+        }
+
         // set routes, where the first route in the list is the primary route that
         // will be used for active guidance
         mapboxNavigation.setNavigationRoutes(routes)
@@ -1169,21 +1273,6 @@ open class MapboxNavigationView(
             startSimulation(routes.first())
         }
 
-        if (isCarplayView) {
-            // hide UI elements
-            // These elements are all handled via react-native-carplay interface methods
-            binding.soundButton.visibility = View.INVISIBLE
-            binding.recenter.visibility = View.INVISIBLE
-            binding.stop.visibility = View.INVISIBLE
-            binding.tripProgressCard.visibility = View.INVISIBLE
-            binding.routeOverview.visibility = View.INVISIBLE
-            binding.maneuverView.visibility = View.INVISIBLE
-        } else {
-            // show UI elements
-            binding.soundButton.visibility = View.VISIBLE
-            binding.routeOverview.visibility = View.VISIBLE
-            binding.tripProgressCard.visibility = View.VISIBLE
-        }
 
         // move the camera to overview when new route is available
         navigationCamera.requestNavigationCameraToFollowing()
@@ -1197,10 +1286,12 @@ open class MapboxNavigationView(
         mapboxReplayer.stop()
 
         // hide UI elements
-        binding.soundButton.visibility = View.INVISIBLE
-        binding.maneuverView.visibility = View.INVISIBLE
-        binding.routeOverview.visibility = View.INVISIBLE
-        binding.tripProgressCard.visibility = View.INVISIBLE
+        binding.soundButton.isVisible = false
+        binding.maneuverView.isVisible = false
+        binding.routeOverview.isVisible = false
+        //binding.tripProgressView.isVisible = false
+        binding.stop.isVisible = false
+        binding.recenter.isVisible = false
     }
 
     private fun startSimulation(route: NavigationRoute) {
@@ -1266,10 +1357,16 @@ open class MapboxNavigationView(
         this.isDarkMode = isDarkMode
     }
 
+
+    @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     public fun startNavigation(response: CommandResponse) {
 
         try {
             Log.d("MapboxNavigationStyles", "Starting Navigation")
+            maneuverApi = MapboxManeuverApi(MapboxDistanceFormatter(distanceFormatterOptions))
+            speechApi = MapboxSpeechApi(context, Locale.US.language)
+            voiceInstructionsPlayer = MapboxVoiceInstructionsPlayer(context, Locale.US.language)
+            
             mapboxNavigation.startTripSession()
 
             // register event listeners
@@ -1292,24 +1389,34 @@ open class MapboxNavigationView(
         try {
             Log.d("MapboxNavigationStyles", "Stopping Navigation")
             mapboxReplayer.finish()
-            if (::maneuverApi.isInitialized) {
+            try {
                 maneuverApi.cancel()
+            } catch (error: Exception) {
+                Log.e("MapboxNavigationView", "maneuverApi.cancel() error: $error")
             }
 
-            if (::routeLineApi.isInitialized) {
+            try {
                 routeLineApi.cancel()
+            } catch (error: Exception) {
+                Log.e("MapboxNavigationView", "routeLineApi.cancel() error: $error")
             }
 
-            if (::routeLineView.isInitialized) {
+            try {
                 routeLineView.cancel()
+            } catch (error: Exception) {
+                Log.e("MapboxNavigationView", "routeLineView.cancel() error: $error")
             }
 
-            if (::speechApi.isInitialized) {
+            try {
                 speechApi.cancel()
+            } catch (error: Exception) {
+                Log.e("MapboxNavigationView", "speechApi.cancel() error: $error")
             }
 
-            if (::voiceInstructionsPlayer.isInitialized) {
+            try {
                 voiceInstructionsPlayer.shutdown()
+            } catch (error: Exception) {
+                Log.e("MapboxNavigationView", "voiceInstructionsPlayer.shutdown() error: $error")
             }
 
             mapboxNavigation.stopTripSession()
@@ -1325,6 +1432,7 @@ open class MapboxNavigationView(
         }
     }
 
+    @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     public fun startFreeDrive(response: CommandResponse) {
         try {
             Log.d("MapboxNavigationStyles", "Starting Free Drive")
@@ -1509,6 +1617,7 @@ open class MapboxNavigationView(
         updateViewportPadding()
         response.success { it.putBoolean("success", true) }
     }
+
 
     public fun setCameraZoom(zoomLevel: Double, response: CommandResponse) {
         try {

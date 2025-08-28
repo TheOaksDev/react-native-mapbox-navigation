@@ -7,8 +7,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import React, { useEffect, useImperativeHandle, forwardRef, useRef, } from 'react';
+import React, { useEffect, useImperativeHandle, forwardRef, useRef, useState, } from 'react';
 import { View, requireNativeComponent, findNodeHandle, } from 'react-native';
+import NativeMapboxNavigationViewModule from './NativeMapboxNavigationViewModule';
 // Require the native component
 const RNMapboxNavigationView = requireNativeComponent('MapboxNavigationView');
 const MapboxNavigation = forwardRef(({ style, testID = 'MapboxNavigationView', origin, destination, shouldSimulateRoute = false, isDarkMode = false, freeDrive = false, mute = false, defaultCameraOptions = {
@@ -20,6 +21,7 @@ const MapboxNavigation = forwardRef(({ style, testID = 'MapboxNavigationView', o
 }, viewStyles, onReady, onCancelNavigation, onError, onArrive, onLocationChange, onRouteProgressChange, onLayout, }, ref) => {
     const viewRef = useRef(null);
     const nativeModule = useRef(null);
+    const [size, setSize] = useState({ height: 0, width: 0 });
     useImperativeHandle(ref, () => ({
         startNavigation: () => __awaiter(void 0, void 0, void 0, function* () {
             if (!nativeModule.current || !viewRef.current) {
@@ -114,11 +116,18 @@ const MapboxNavigation = forwardRef(({ style, testID = 'MapboxNavigationView', o
     }), []);
     useEffect(() => {
         // Initialize the native module reference
-        // You'll need to create the corresponding native module
-        // nativeModule.current = NativeModules.RNMapboxNavigationModule as RNMapboxNavigationModule;
+        nativeModule.current = NativeMapboxNavigationViewModule;
     }, []);
-    return (<View style={style}>
-        <RNMapboxNavigationView testID={testID} ref={viewRef} style={style} origin={origin} destination={destination} shouldSimulateRoute={shouldSimulateRoute} isDarkMode={isDarkMode} freeDrive={freeDrive} mute={mute} defaultCameraOptions={defaultCameraOptions} viewStyles={viewStyles} onReady={onReady} onCancelNavigation={onCancelNavigation} onError={onError} onArrive={onArrive} onLocationChange={onLocationChange} onRouteProgressChange={onRouteProgressChange} onLayout={onLayout}/>
+    return (<View style={style} onLayout={({ nativeEvent, }) => {
+            setSize({
+                height: nativeEvent.layout.height,
+                width: nativeEvent.layout.width,
+            });
+        }}>
+        <RNMapboxNavigationView testID={testID} ref={viewRef} style={{
+            height: size.height,
+            width: size.width,
+        }} origin={origin} destination={destination} shouldSimulateRoute={shouldSimulateRoute} isDarkMode={isDarkMode} freeDrive={freeDrive} mute={mute} defaultCameraOptions={defaultCameraOptions} viewStyles={viewStyles} onReady={onReady} onCancelNavigation={onCancelNavigation} onError={onError} onArrive={onArrive} onLocationChange={onLocationChange} onRouteProgressChange={onRouteProgressChange} onLayout={onLayout}/>
       </View>);
 });
 export default MapboxNavigation;

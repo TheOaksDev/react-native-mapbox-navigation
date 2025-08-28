@@ -121,6 +121,8 @@ export interface MapboxNavigationRef {
         left: number;
         bottom: number;
         right: number;
+        width: number;
+        height: number;
     }) => Promise<void>;
     getCameraZoom: () => Promise<number>;
 }

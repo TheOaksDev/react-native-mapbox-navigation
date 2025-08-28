@@ -3,6 +3,7 @@ import React, {
   useImperativeHandle,
   forwardRef,
   useRef,
+  useState,
 } from 'react';
 import {
   View,
@@ -12,6 +13,9 @@ import {
   type NativeSyntheticEvent,
   findNodeHandle,
 } from 'react-native';
+import NativeMapboxNavigationViewModule, {
+  type Spec,
+} from './NativeMapboxNavigationViewModule';
 
 export interface MapboxNavigationProps extends ViewProps {
   testID?: string;
@@ -130,28 +134,14 @@ export interface MapboxNavigationRef {
     left: number;
     bottom: number;
     right: number;
+    width: number;
+    height: number;
   }) => Promise<void>;
   getCameraZoom: () => Promise<number>;
 }
 
-// Define the native module interface
-interface RNMapboxNavigationModule {
-  startNavigation: (node: number) => Promise<void>;
-  stopNavigation: (node: number) => Promise<void>;
-  startFreeDrive: (node: number) => Promise<void>;
-  stopFreeDrive: (node: number) => Promise<void>;
-  showRoutePreview: (
-    node: number,
-    coordinates: Array<{ latitude: number; longitude: number }>,
-  ) => Promise<void>;
-  hideRoutePreview: (node: number) => Promise<void>;
-  setCameraZoom: (node: number, zoomLevel: number) => Promise<void>;
-  setVisibleArea: (
-    node: number,
-    visibleArea: { top: number; left: number; bottom: number; right: number },
-  ) => Promise<void>;
-  getCameraZoom: (node: number) => Promise<number>;
-}
+// Use the Spec interface directly
+type RNMapboxNavigationModule = Spec;
 
 // Require the native component
 const RNMapboxNavigationView = requireNativeComponent<MapboxNavigationProps>(
@@ -189,6 +179,7 @@ const MapboxNavigation = forwardRef<MapboxNavigationRef, MapboxNavigationProps>(
   ) => {
     const viewRef = useRef(null);
     const nativeModule = useRef<RNMapboxNavigationModule | null>(null);
+    const [size, setSize] = useState({ height: 0, width: 0 });
 
     useImperativeHandle(
       ref,
@@ -289,16 +280,30 @@ const MapboxNavigation = forwardRef<MapboxNavigationRef, MapboxNavigationProps>(
 
     useEffect(() => {
       // Initialize the native module reference
-      // You'll need to create the corresponding native module
-      // nativeModule.current = NativeModules.RNMapboxNavigationModule as RNMapboxNavigationModule;
+      nativeModule.current = NativeMapboxNavigationViewModule;
     }, []);
 
     return (
-      <View style={style}>
+      <View
+        style={style}
+        onLayout={({
+          nativeEvent,
+        }: {
+          nativeEvent: { layout: { height: number; width: number } };
+        }) => {
+          setSize({
+            height: nativeEvent.layout.height,
+            width: nativeEvent.layout.width,
+          });
+        }}
+      >
         <RNMapboxNavigationView
           testID={testID}
           ref={viewRef}
-          style={style}
+          style={{
+            height: size.height,
+            width: size.width,
+          }}
           origin={origin}
           destination={destination}
           shouldSimulateRoute={shouldSimulateRoute}

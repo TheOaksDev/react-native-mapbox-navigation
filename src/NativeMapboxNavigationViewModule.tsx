@@ -1,37 +1,37 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import type { TurboModule } from 'react-native/Libraries/TurboModule/RCTExport';
-import { Double, Int32 } from 'react-native/Libraries/Types/CodegenTypes';
-import { TurboModuleRegistry } from 'react-native';
+import { NativeModules } from 'react-native';
 
 type Coordinate = {
-  latitude: Double;
-  longitude: Double;
+  latitude: number;
+  longitude: number;
 };
 
 type VisibleArea = {
-  top: Double;
-  left: Double;
-  bottom: Double;
-  right: Double;
-  width: Double;
-  height: Double;
+  top: number;
+  left: number;
+  bottom: number;
+  right: number;
+  width: number;
+  height: number;
 };
 
-export interface Spec extends TurboModule {
-  startNavigation: (viewRef: Int32 | null) => void;
-  stopNavigation: (viewRef: Int32 | null) => void;
-  startFreeDrive: (viewRef: Int32 | null) => void;
-  stopFreeDrive: (viewRef: Int32 | null) => void;
+export interface Spec {
+  startNavigation: (viewRef: number | null) => Promise<any>;
+  stopNavigation: (viewRef: number | null) => Promise<any>;
+  startFreeDrive: (viewRef: number | null) => Promise<any>;
+  stopFreeDrive: (viewRef: number | null) => Promise<any>;
   showRoutePreview: (
-    viewRef: Int32 | null,
+    viewRef: number | null,
     coordinates: Array<Coordinate>,
-  ) => void;
-  hideRoutePreview: (viewRef: Int32 | null) => void;
-  setCameraZoom: (viewRef: Int32 | null, zoomLevel: Double) => void;
-  getCameraZoom: (viewRef: Int32 | null) => Double;
-  setVisibleArea: (viewRef: Int32 | null, visibleArea: VisibleArea) => void;
+  ) => Promise<any>;
+  hideRoutePreview: (viewRef: number | null) => Promise<any>;
+  setCameraZoom: (viewRef: number | null, zoomLevel: number) => Promise<any>;
+  getCameraZoom: (viewRef: number | null) => Promise<any>;
+  setVisibleArea: (
+    viewRef: number | null,
+    visibleArea: VisibleArea,
+  ) => Promise<any>;
+  testMethod: () => Promise<any>;
 }
 
-export default TurboModuleRegistry.getEnforcing<Spec>(
-  'MapboxNavigationViewModule',
-);
+export default NativeModules.MapboxNavigationViewModule as Spec;

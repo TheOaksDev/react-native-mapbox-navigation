@@ -1,6 +1,8 @@
 #import "React/RCTViewManager.h"
+#import "React/RCTBridgeModule.h"
 
-@interface RCT_EXTERN_MODULE(MapboxNavigationManager, RCTViewManager)
+// View Manager Interface
+@interface RCT_EXTERN_MODULE(MapboxNavigationViewManager, RCTViewManager)
 
 RCT_EXPORT_VIEW_PROPERTY(onLocationChange, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onRouteProgressChange, RCTDirectEventBlock)

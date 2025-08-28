@@ -1,2 +1,3 @@
-import { TurboModuleRegistry } from 'react-native';
-export default TurboModuleRegistry.getEnforcing('MapboxNavigationViewModule');
+/* eslint-disable @typescript-eslint/ban-types */
+import { NativeModules } from 'react-native';
+export default NativeModules.MapboxNavigationViewModule;

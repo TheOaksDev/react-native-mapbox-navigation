@@ -1,6 +1,7 @@
 import MapboxCoreNavigation
 import MapboxDirections
 import MapboxNavigation
+import MapboxMaps
 
 // // adapted from https://pspdfkit.com/blog/2017/native-view-controllers-and-react-native/ and https://github.com/mslabenyak/react-native-mapbox-navigation/blob/master/ios/Mapbox/MapboxNavigationView.swift
 extension UIView {
@@ -58,8 +59,22 @@ class CustomEmptyView: ContainerViewController {
 @objc(MapboxNavigationView)
 class MapboxNavigationView: UIView, NavigationViewControllerDelegate, NavigationServiceDelegate {
     weak var navViewController: NavigationViewController?
+    private var navigationMapView: NavigationMapView?
     var embedded: Bool
     var embedding: Bool
+    
+    // Navigation state management
+    private var isNavigationActive: Bool = false
+    private var isFreeDriveActive: Bool = false
+    private var currentRouteResponse: RouteResponse?
+    private var currentRouteOptions: NavigationRouteOptions?
+    private var navigationService: MapboxNavigationService?
+    private var passiveLocationManager: PassiveLocationManager?
+    private var viewportDataSource: ViewportDataSource?
+    
+    // Camera and viewport management
+    private var currentZoomLevel: Double = 10.0
+    private var visibleArea: [String: Any]?
 
     @objc var origin: NSArray = [] {
         didSet { setNeedsLayout() }
@@ -90,6 +105,15 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Navigation
         embedded = false
         embedding = false
         super.init(frame: frame)
+        
+        // Register this view with the native module
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            if let bridge = RCTBridge.current(),
+               let module = bridge.module(forName: "MapboxNavigationViewModule") as? MapboxNavigationViewModule {
+                module.registerNavigationView(self.tag, view: self)
+            }
+        }
     }
 
     @available(*, unavailable)
@@ -100,11 +124,12 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Navigation
     override func layoutSubviews() {
         super.layoutSubviews()
 
-        if navViewController == nil && !embedding && !embedded {
+        if navViewController == nil && navigationMapView == nil && !embedding && !embedded {
             embed()
             applyStyles()
         } else {
             navViewController?.view.frame = bounds
+            navigationMapView?.frame = bounds
         }
     }
 
@@ -112,17 +137,288 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Navigation
         super.removeFromSuperview()
         // cleanup and teardown any existing resources
         navViewController?.removeFromParent()
+        navigationMapView?.removeFromSuperview()
+        
+        // Unregister this view from the native module
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            if let bridge = RCTBridge.current(),
+               let module = bridge.module(forName: "MapboxNavigationViewModule") as? MapboxNavigationViewModule {
+                module.unregisterNavigationView(self.tag)
+            }
+        }
+    }
+
+    // MARK: - Public Navigation Methods
+    
+    func startNavigation() {
+        print("🔵 MapboxNavigationView: startNavigation called")
+        
+        // Check if we have a navigation service (route-based navigation)
+        if let navigationService = navigationService {
+            print("🔵 MapboxNavigationView: Starting route-based navigation")
+            isNavigationActive = true
+            
+            // Start the navigation session
+            navigationService.start()
+            
+            // Set up navigation camera
+            if let navVC = navViewController {
+                navVC.navigationMapView?.navigationCamera.follow()
+                
+                // Configure viewport for active navigation
+                if let navigationMapView = navVC.navigationMapView {
+                    let newViewportDataSource = NavigationViewportDataSource(navigationMapView.mapView, viewportDataSourceType: .active)
+                    viewportDataSource = newViewportDataSource
+                    navigationMapView.navigationCamera.viewportDataSource = newViewportDataSource
+                }
+            }
+            
+            print("🔵 MapboxNavigationView: Route-based navigation started successfully")
+        } else {
+            print("🔵 MapboxNavigationView: No route available, starting free-drive navigation")
+            // If no route is available, we're already in free-drive mode
+            isNavigationActive = true
+            isFreeDriveActive = true
+            
+            // Configure viewport for active navigation (following user location)
+            if let navigationMapView = navigationMapView {
+                let newViewportDataSource = NavigationViewportDataSource(navigationMapView.mapView, viewportDataSourceType: .active)
+                viewportDataSource = newViewportDataSource
+                navigationMapView.navigationCamera.viewportDataSource = newViewportDataSource
+                navigationMapView.navigationCamera.follow()
+            } else if let navVC = navViewController {
+                if let navMapView = navVC.navigationMapView {
+                    let newViewportDataSource = NavigationViewportDataSource(navMapView.mapView, viewportDataSourceType: .active)
+                    viewportDataSource = newViewportDataSource
+                    navMapView.navigationCamera.viewportDataSource = newViewportDataSource
+                    navMapView.navigationCamera.follow()
+                }
+            }
+            
+            print("🔵 MapboxNavigationView: Free-drive navigation started successfully")
+        }
+    }
+    
+    func stopNavigation() {
+        print("🔵 MapboxNavigationView: stopNavigation called")
+        
+        isNavigationActive = false
+        
+        // Stop the navigation service
+        navigationService?.stop()
+        
+        // Clear routes
+        navViewController?.navigationMapView?.removeRoutes()
+        navigationMapView?.removeRoutes()
+        
+        // Reset to free drive mode
+        startFreeDrive()
+        
+        print("🔵 MapboxNavigationView: Navigation stopped successfully")
+    }
+    
+    func startFreeDrive() {
+        print("🔵 MapboxNavigationView: startFreeDrive called")
+        
+        isFreeDriveActive = true
+        
+        // Set up passive location manager for free drive
+        passiveLocationManager = PassiveLocationManager()
+        
+        // Configure viewport for passive navigation
+        if let mapView = navigationMapView {
+            let newViewportDataSource = NavigationViewportDataSource(mapView.mapView, viewportDataSourceType: .passive)
+            viewportDataSource = newViewportDataSource
+            mapView.navigationCamera.viewportDataSource = newViewportDataSource
+            mapView.navigationCamera.follow()
+        } else if let navVC = navViewController {
+            if let navMapView = navVC.navigationMapView {
+                let newViewportDataSource = NavigationViewportDataSource(navMapView.mapView, viewportDataSourceType: .passive)
+                viewportDataSource = newViewportDataSource
+                navMapView.navigationCamera.viewportDataSource = newViewportDataSource
+                navMapView.navigationCamera.follow()
+            }
+        }
+        
+        print("🔵 MapboxNavigationView: Free drive started successfully")
+    }
+    
+    func stopFreeDrive() {
+        print("🔵 MapboxNavigationView: stopFreeDrive called")
+        
+        isFreeDriveActive = false
+        passiveLocationManager = nil
+        
+        print("🔵 MapboxNavigationView: Free drive stopped successfully")
+    }
+    
+    func showRoutePreview(coordinates: [[String: Any]]) {
+        print("🔵 MapboxNavigationView: showRoutePreview called with \(coordinates.count) coordinates")
+        
+        guard coordinates.count >= 2 else {
+            print("🔴 MapboxNavigationView: At least two coordinates required")
+            return
+        }
+        
+        // Convert coordinates to CLLocationCoordinate2D
+        let waypoints = coordinates.compactMap { coord -> Waypoint? in
+            guard let latitude = coord["latitude"] as? Double,
+                  let longitude = coord["longitude"] as? Double else {
+                return nil
+            }
+            return Waypoint(coordinate: CLLocationCoordinate2D(latitude: latitude, longitude: longitude))
+        }
+        
+        guard waypoints.count >= 2 else {
+            print("🔴 MapboxNavigationView: Invalid coordinates")
+            return
+        }
+        
+        // Create route options
+        let routeOptions = NavigationRouteOptions(waypoints: waypoints, profileIdentifier: .automobileAvoidingTraffic)
+        
+        // Calculate route
+        Directions.shared.calculate(routeOptions) { [weak self] (_, result) in
+            guard let self = self else { return }
+            
+            switch result {
+            case .failure(let error):
+                print("🔴 MapboxNavigationView: Route calculation failed: \(error.localizedDescription)")
+                self.onError?(["message": error.localizedDescription])
+                
+            case .success(let response):
+                print("🔵 MapboxNavigationView: Route preview calculated successfully")
+                
+                // Store the route response for later use
+                self.currentRouteResponse = response
+                self.currentRouteOptions = routeOptions
+                
+                // Show the route on the map
+                if let mapView = self.navigationMapView {
+                    if let route = response.routes?.first {
+                        mapView.show([route])
+                    }
+                    mapView.navigationCamera.moveToOverview()
+                } else if let navVC = self.navViewController {
+                    if let navigationMapView = navVC.navigationMapView {
+                        if let route = response.routes?.first {
+                            navigationMapView.show([route])
+                        }
+                        navigationMapView.navigationCamera.moveToOverview()
+                    }
+                }
+            }
+        }
+    }
+    
+    func hideRoutePreview() {
+        print("🔵 MapboxNavigationView: hideRoutePreview called")
+        
+        // Clear the route from the map
+        navigationMapView?.removeRoutes()
+        navViewController?.navigationMapView?.removeRoutes()
+        
+        // Clear stored route data
+        currentRouteResponse = nil
+        currentRouteOptions = nil
+        
+        // Return to following mode
+        navigationMapView?.navigationCamera.follow()
+        navViewController?.navigationMapView?.navigationCamera.follow()
+        
+        print("🔵 MapboxNavigationView: Route preview hidden successfully")
+    }
+    
+    func setCameraZoom(zoomLevel: Double) {
+        print("🔵 MapboxNavigationView: setCameraZoom called with zoom: \(zoomLevel)")
+        
+        currentZoomLevel = zoomLevel
+        
+        // Set camera zoom
+        if let mapView = navigationMapView {
+            let cameraOptions = CameraOptions(zoom: zoomLevel)
+            mapView.mapView.mapboxMap.setCamera(to: cameraOptions)
+        } else if let navVC = navViewController {
+            if let navigationMapView = navVC.navigationMapView {
+                let cameraOptions = CameraOptions(zoom: zoomLevel)
+                navigationMapView.mapView.mapboxMap.setCamera(to: cameraOptions)
+            }
+        }
+        
+        print("🔵 MapboxNavigationView: Camera zoom set successfully")
+    }
+    
+    func getCameraZoom() -> Double {
+        print("🔵 MapboxNavigationView: getCameraZoom called")
+        
+        if let mapView = navigationMapView {
+            currentZoomLevel = mapView.mapView.mapboxMap.cameraState.zoom
+        } else if let navVC = navViewController {
+            if let navigationMapView = navVC.navigationMapView {
+                currentZoomLevel = navigationMapView.mapView.mapboxMap.cameraState.zoom
+            }
+        }
+        
+        print("🔵 MapboxNavigationView: Current zoom level: \(currentZoomLevel)")
+        return currentZoomLevel
+    }
+    
+    func setVisibleArea(visibleArea: [String: Any]) {
+        print("🔵 MapboxNavigationView: setVisibleArea called")
+        
+        self.visibleArea = visibleArea
+        
+        // Update viewport padding based on visible area
+        if let top = visibleArea["top"] as? Double,
+           let left = visibleArea["left"] as? Double,
+           let bottom = visibleArea["bottom"] as? Double,
+           let right = visibleArea["right"] as? Double {
+            
+            let padding = EdgeInsets(top: top, left: left, bottom: bottom, right: right)
+            
+            if let mapView = navigationMapView {
+                if let navigationViewportDataSource = viewportDataSource as? NavigationViewportDataSource {
+                    //navigationViewportDataSource.overviewPadding = padding
+                    //navigationViewportDataSource.followingPadding = padding
+                    //navigationViewportDataSource.evaluate()
+                }
+            } else if let navVC = navViewController {
+                if let navigationMapView = navVC.navigationMapView {
+                    if let navigationViewportDataSource = viewportDataSource as? NavigationViewportDataSource {
+                        //navigationViewportDataSource.overviewPadding = padding
+                        //navigationViewportDataSource.followingPadding = padding
+                        //navigationViewportDataSource.evaluate()
+                    }
+                }
+            }
+        }
+        
+        print("🔵 MapboxNavigationView: Visible area set successfully")
     }
 
     private func embed() {
-        guard origin.count == 2 && destination.count == 2 else { return }
-
+        print("🔵 MapboxNavigationView: embed() called")
+        print("🔵 MapboxNavigationView: origin count: \(origin.count), destination count: \(destination.count)")
+        
         embedding = true
 
+        // Check if we have valid coordinates for navigation
+        let hasValidCoordinates = origin.count == 2 && destination.count == 2
+        
+        if hasValidCoordinates {
+            print("🔵 MapboxNavigationView: Valid coordinates provided, setting up navigation")
+            setupNavigationWithRoute()
+        } else {
+            print("🔵 MapboxNavigationView: No valid coordinates, setting up free-drive mode")
+            setupFreeDriveMode()
+        }
+    }
+    
+    private func setupNavigationWithRoute() {
         let originWaypoint = Waypoint(coordinate: CLLocationCoordinate2D(latitude: origin[1] as! CLLocationDegrees, longitude: origin[0] as! CLLocationDegrees))
         let destinationWaypoint = Waypoint(coordinate: CLLocationCoordinate2D(latitude: destination[1] as! CLLocationDegrees, longitude: destination[0] as! CLLocationDegrees))
 
-        // let options = NavigationRouteOptions(waypoints: [originWaypoint, destinationWaypoint])
         let options = NavigationRouteOptions(waypoints: [originWaypoint, destinationWaypoint], profileIdentifier: .automobileAvoidingTraffic)
 
         Directions.shared.calculate(options) { [weak self] (_, result) in
@@ -132,52 +428,110 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Navigation
 
             switch result {
             case let .failure(error):
-                strongSelf.onError!(["message": error.localizedDescription])
+                print("🔴 MapboxNavigationView: Route calculation failed: \(error.localizedDescription)")
+                strongSelf.onError?(["message": error.localizedDescription])
+                // Fall back to free-drive mode if route calculation fails
+                strongSelf.setupFreeDriveMode()
+                
             case let .success(response):
+                print("🔵 MapboxNavigationView: Route calculation successful")
                 guard let weakSelf = self else {
                     return
                 }
-
-                let bottomBanner = CustomEmptyView()
-                let topBanner = CustomEmptyView()
 
                 let navigationService = MapboxNavigationService(routeResponse: response, routeIndex: 0, routeOptions: options, simulating: strongSelf.shouldSimulateRoute ? .always : .never)
                 let navigationOptions = NavigationOptions(navigationService: navigationService)
                 let vc = NavigationViewController(for: response, routeIndex: 0, routeOptions: options, navigationOptions: navigationOptions)
 
-                if !strongSelf.mapStyleURL.isEmpty {
-                    vc.navigationMapView?.mapView.mapboxMap.style.styleManager.setStyleURIForUri(strongSelf.mapStyleURL)
-                }
-
-                vc.showsReportFeedback = !strongSelf.hideReportFeedback
-                vc.showsEndOfRouteFeedback = strongSelf.showsEndOfRouteFeedback
-
-                if strongSelf.isCarplayView {
-                    vc.floatingButtonsPosition = .topTrailing
-                }
-                
-                StatusView.appearance().isHidden = strongSelf.isCarplayView
-                TopBannerView.appearance().isHidden = strongSelf.isCarplayView
-                BottomBannerView.appearance().isHidden = strongSelf.isCarplayView
-                InstructionsBannerView.appearance().isHidden = strongSelf.isCarplayView
-                NextBannerView.appearance().isHidden = strongSelf.isCarplayView
-                StepInstructionsView.appearance().isHidden = strongSelf.isCarplayView
-                FloatingButton.appearance().isHidden = strongSelf.isCarplayView
-                NavigationSettings.shared.voiceMuted = strongSelf.mute
-
-                vc.delegate = strongSelf
-                navigationService.delegate = strongSelf
-
-                parentVC.addChild(vc)
-                strongSelf.addSubview(vc.view)
-                vc.view.frame = strongSelf.bounds
-                vc.didMove(toParent: parentVC)
-                strongSelf.navViewController = vc
+                strongSelf.configureNavigationViewController(vc)
+                strongSelf.setupNavigationService(navigationService, response: response, options: options)
+                strongSelf.embedViewController(vc, in: parentVC)
             }
 
             strongSelf.embedding = false
             strongSelf.embedded = true
         }
+    }
+    
+    private func setupFreeDriveMode() {
+        print("🔵 MapboxNavigationView: Setting up free-drive mode")
+        
+        // For free-drive navigation, we'll create a simple NavigationMapView directly
+        // This avoids the need for dummy routes entirely
+        let mapView = NavigationMapView(frame: bounds)
+        self.navigationMapView = mapView
+        
+        // Set up passive location manager for free drive
+        passiveLocationManager = PassiveLocationManager()
+        
+        // Configure viewport for passive navigation
+        let newViewportDataSource = NavigationViewportDataSource(mapView.mapView, viewportDataSourceType: .passive)
+        viewportDataSource = newViewportDataSource
+        mapView.navigationCamera.viewportDataSource = newViewportDataSource
+        mapView.navigationCamera.follow()
+        
+        // Set initial camera position
+        let defaultCoordinate = CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194) // San Francisco
+        let cameraOptions = CameraOptions(center: defaultCoordinate, zoom: 10.0)
+        mapView.mapView.mapboxMap.setCamera(to: cameraOptions)
+        
+        // Apply map style if specified
+        if !mapStyleURL.isEmpty {
+            mapView.mapView.mapboxMap.style.styleManager.setStyleURIForUri(mapStyleURL)
+        }
+        
+        // Add the navigation map view directly to our view
+        addSubview(mapView)
+        mapView.frame = bounds
+        
+        isFreeDriveActive = true
+        embedding = false
+        embedded = true
+        
+        print("🔵 MapboxNavigationView: Free-drive mode setup complete")
+    }
+    
+    private func configureNavigationViewController(_ vc: NavigationViewController) {
+        if !mapStyleURL.isEmpty {
+            vc.navigationMapView?.mapView.mapboxMap.style.styleManager.setStyleURIForUri(mapStyleURL)
+        }
+
+        vc.showsReportFeedback = !hideReportFeedback
+        vc.showsEndOfRouteFeedback = showsEndOfRouteFeedback
+
+        if isCarplayView {
+            vc.floatingButtonsPosition = .topTrailing
+        }
+        
+        StatusView.appearance().isHidden = isCarplayView
+        TopBannerView.appearance().isHidden = isCarplayView
+        BottomBannerView.appearance().isHidden = isCarplayView
+        InstructionsBannerView.appearance().isHidden = isCarplayView
+        NextBannerView.appearance().isHidden = isCarplayView
+        StepInstructionsView.appearance().isHidden = isCarplayView
+        FloatingButton.appearance().isHidden = isCarplayView
+        NavigationSettings.shared.voiceMuted = mute
+
+        vc.delegate = self
+    }
+    
+    private func setupNavigationService(_ navigationService: MapboxNavigationService, response: RouteResponse, options: NavigationRouteOptions) {
+        navigationService.delegate = self
+        
+        // Store references for later use
+        self.navigationService = navigationService
+        self.currentRouteResponse = response
+        self.currentRouteOptions = options
+    }
+    
+    private func embedViewController(_ vc: NavigationViewController, in parentVC: UIViewController) {
+        parentVC.addChild(vc)
+        addSubview(vc.view)
+        vc.view.frame = bounds
+        vc.didMove(toParent: parentVC)
+        navViewController = vc
+        
+        print("🔵 MapboxNavigationView: NavigationViewController embedded successfully")
     }
 
     func navigationViewController(_: NavigationViewController, didUpdate progress: RouteProgress, with location: CLLocation, rawLocation _: CLLocation) {

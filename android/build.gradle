@@ -12,11 +12,11 @@
 
 // https://www.cognizantsoftvision.com/blog/creating-an-android-native-module-for-react-native/
 def defaultMapboxMapsImpl = "mapbox"
-def defaultMapboxMapsVersion = "10.18.4"
-def DEFAULT_COMPILE_SDK_VERSION = 31
-def DEFAULT_BUILD_TOOLS_VERSION = '30.0.2'
-def DEFAULT_MIN_SDK_VERSION = 21
-def DEFAULT_TARGET_SDK_VERSION = 31
+def defaultMapboxMapsVersion = "11.8.0"
+def DEFAULT_COMPILE_SDK_VERSION = 35
+def DEFAULT_BUILD_TOOLS_VERSION = '34.0.0'
+def DEFAULT_MIN_SDK_VERSION = 26
+def DEFAULT_TARGET_SDK_VERSION = 35
 
 def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
@@ -85,11 +85,11 @@ android {
         abortOnError false
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     buildFeatures {
         viewBinding true
@@ -119,16 +119,16 @@ dependencies {
     //noinspection GradleDynamicVersion
     implementation 'com.facebook.react:react-native:+'  // From node_modules
 
-    implementation "com.mapbox.navigationcore:android:3.4.0-beta.1"
-    implementation "com.mapbox.navigationcore:ui-components:3.4.0-beta.1"
-    //implementation 'com.mapbox.navigationcore:android-auto-components:3.4.0-beta.1'
+    implementation "com.mapbox.navigationcore:android:3.5.7"
+    implementation "com.mapbox.navigationcore:ui-components:3.5.7"
+    implementation 'com.mapbox.navigationcore:android-auto-components:3.5.7'
+    implementation 'androidx.work:work-runtime:2.8.0'
+    implementation 'androidx.work:work-runtime-ktx:2.8.0'
 
-    //implementation "com.mapbox.navigation:android:2.20.2"
+    // implementation "com.mapbox.navigation:android:2.20.4"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.cardview:cardview:1.0.0'
-    implementation 'androidx.work:work-runtime:2.8.0'
-    implementation 'androidx.work:work-runtime-ktx:2.8.0'
 }
 
 def configureReactNativePom(def pom) {
