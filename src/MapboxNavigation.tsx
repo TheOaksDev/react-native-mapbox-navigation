@@ -192,8 +192,9 @@ const MapboxNavigation = forwardRef<MapboxNavigationRef, MapboxNavigationProps>(
           if (!node) {
             throw new Error('View node not found');
           }
-          return nativeModule.current.startNavigation(node);
-        },
+            console.log('🔵 React Native: Calling startNavigation with node:', node);
+            return nativeModule.current.startNavigation(node);
+          },
         stopNavigation: async () => {
           if (!nativeModule.current || !viewRef.current) {
             throw new Error('View or native module not found');
@@ -202,6 +203,7 @@ const MapboxNavigation = forwardRef<MapboxNavigationRef, MapboxNavigationProps>(
           if (!node) {
             throw new Error('View node not found');
           }
+          console.log('🔵 React Native: Calling stopNavigation with node:', node);
           return nativeModule.current.stopNavigation(node);
         },
         startFreeDrive: async () => {
@@ -212,6 +214,7 @@ const MapboxNavigation = forwardRef<MapboxNavigationRef, MapboxNavigationProps>(
           if (!node) {
             throw new Error('View node not found');
           }
+          console.log('🔵 React Native: Calling startFreeDrive with node:', node);
           return nativeModule.current.startFreeDrive(node);
         },
         stopFreeDrive: async () => {
@@ -222,6 +225,7 @@ const MapboxNavigation = forwardRef<MapboxNavigationRef, MapboxNavigationProps>(
           if (!node) {
             throw new Error('View node not found');
           }
+          console.log('🔵 React Native: Calling stopFreeDrive with node:', node);
           return nativeModule.current.stopFreeDrive(node);
         },
         showRoutePreview: async (coordinates) => {
@@ -232,6 +236,7 @@ const MapboxNavigation = forwardRef<MapboxNavigationRef, MapboxNavigationProps>(
           if (!node) {
             throw new Error('View node not found');
           }
+          console.log('🔵 React Native: Calling showRoutePreview with node:', node);
           return nativeModule.current.showRoutePreview(node, coordinates);
         },
         hideRoutePreview: async () => {
@@ -242,6 +247,7 @@ const MapboxNavigation = forwardRef<MapboxNavigationRef, MapboxNavigationProps>(
           if (!node) {
             throw new Error('View node not found');
           }
+          console.log('🔵 React Native: Calling hideRoutePreview with node:', node);
           return nativeModule.current.hideRoutePreview(node);
         },
         setCameraZoom: async (zoomLevel) => {
@@ -252,6 +258,7 @@ const MapboxNavigation = forwardRef<MapboxNavigationRef, MapboxNavigationProps>(
           if (!node) {
             throw new Error('View node not found');
           }
+          console.log('🔵 React Native: Calling setCameraZoom with node:', node);
           return nativeModule.current.setCameraZoom(node, zoomLevel);
         },
         setVisibleArea: async (visibleArea) => {
@@ -262,6 +269,7 @@ const MapboxNavigation = forwardRef<MapboxNavigationRef, MapboxNavigationProps>(
           if (!node) {
             throw new Error('View node not found');
           }
+          console.log('🔵 React Native: Calling setVisibleArea with node:', node);
           return nativeModule.current.setVisibleArea(node, visibleArea);
         },
         getCameraZoom: async () => {
@@ -272,6 +280,7 @@ const MapboxNavigation = forwardRef<MapboxNavigationRef, MapboxNavigationProps>(
           if (!node) {
             throw new Error('View node not found');
           }
+          console.log('🔵 React Native: Calling getCameraZoom with node:', node);
           return nativeModule.current.getCameraZoom(node);
         },
       }),

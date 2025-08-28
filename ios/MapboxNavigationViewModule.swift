@@ -24,29 +24,57 @@ class MapboxNavigationViewModule: NSObject, RCTBridgeModule {
   }
   
   @objc
-  func startNavigation(_ viewRef: NSNumber, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+  func registerView(_ viewRef: NSNumber, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    print("🔵 MapboxNavigationViewModule: registerView called with viewRef: \(viewRef)")
+    
     DispatchQueue.main.async { [weak self] in
       guard let self = self else {
         reject("ERROR", "Module instance is nil", nil)
         return
       }
       
-      guard let view = self.navigationViews[viewRef.intValue] else {
-        reject("ERROR", "Navigation view not found", nil)
-        return
-      }
-      
-      do {
-        view.startNavigation()
-        resolve(["success": true])
-      } catch {
-        reject("ERROR", "Failed to start navigation: \(error.localizedDescription)", error)
+      // Find the view by tag
+      if let bridge = RCTBridge.current(),
+         let viewManager = bridge.module(forName: "MapboxNavigationViewManager") as? MapboxNavigationViewManager {
+        // This is a bit of a workaround - we'll need to find the view differently
+        print("🔵 MapboxNavigationViewModule: Attempting to register view with ref: \(viewRef.intValue)")
+        resolve(["success": true, "message": "View registration attempted"])
+      } else {
+        reject("ERROR", "Could not find view manager", nil)
       }
     }
   }
   
   @objc
+  func startNavigation(_ viewRef: NSNumber, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    print("🔵 MapboxNavigationViewModule: startNavigation called with viewRef: \(viewRef)")
+    
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else {
+        print("🔴 MapboxNavigationViewModule: Module instance is nil")
+        reject("ERROR", "Module instance is nil", nil)
+        return
+      }
+      
+      guard let view = self.navigationViews[viewRef.intValue] else {
+        print("🔴 MapboxNavigationViewModule: Navigation view not found for ref: \(viewRef.intValue)")
+        print("🔴 MapboxNavigationViewModule: Available views: \(self.navigationViews.keys)")
+        reject("ERROR", "Navigation view not found", nil)
+        return
+      }
+      
+      print("🔵 MapboxNavigationViewModule: Found view, calling startNavigation")
+      view.startNavigation()
+      resolve(["success": true])
+    }
+  }
+  
+
+  
+  @objc
   func stopNavigation(_ viewRef: NSNumber, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    print("🔵 MapboxNavigationViewModule: stopNavigation called with viewRef: \(viewRef)")
+    
     DispatchQueue.main.async { [weak self] in
       guard let self = self else {
         reject("ERROR", "Module instance is nil", nil)
@@ -58,17 +86,15 @@ class MapboxNavigationViewModule: NSObject, RCTBridgeModule {
         return
       }
       
-      do {
-        view.stopNavigation()
-        resolve(["success": true])
-      } catch {
-        reject("ERROR", "Failed to stop navigation: \(error.localizedDescription)", error)
-      }
+      view.stopNavigation()
+      resolve(["success": true])
     }
   }
   
   @objc
   func startFreeDrive(_ viewRef: NSNumber, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    print("🔵 MapboxNavigationViewModule: startFreeDrive called with viewRef: \(viewRef)")
+    
     DispatchQueue.main.async { [weak self] in
       guard let self = self else {
         reject("ERROR", "Module instance is nil", nil)
@@ -80,17 +106,15 @@ class MapboxNavigationViewModule: NSObject, RCTBridgeModule {
         return
       }
       
-      do {
-        view.startFreeDrive()
-        resolve(["success": true])
-      } catch {
-        reject("ERROR", "Failed to start free drive: \(error.localizedDescription)", error)
-      }
+      view.startFreeDrive()
+      resolve(["success": true])
     }
   }
   
   @objc
   func stopFreeDrive(_ viewRef: NSNumber, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    print("🔵 MapboxNavigationViewModule: stopFreeDrive called with viewRef: \(viewRef)")
+    
     DispatchQueue.main.async { [weak self] in
       guard let self = self else {
         reject("ERROR", "Module instance is nil", nil)
@@ -102,17 +126,15 @@ class MapboxNavigationViewModule: NSObject, RCTBridgeModule {
         return
       }
       
-      do {
-        view.stopFreeDrive()
-        resolve(["success": true])
-      } catch {
-        reject("ERROR", "Failed to stop free drive: \(error.localizedDescription)", error)
-      }
+      view.stopFreeDrive()
+      resolve(["success": true])
     }
   }
   
   @objc
   func showRoutePreview(_ viewRef: NSNumber, coordinates: [[String: Any]], resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    print("🔵 MapboxNavigationViewModule: showRoutePreview called with viewRef: \(viewRef)")
+    
     DispatchQueue.main.async { [weak self] in
       guard let self = self else {
         reject("ERROR", "Module instance is nil", nil)
@@ -124,17 +146,15 @@ class MapboxNavigationViewModule: NSObject, RCTBridgeModule {
         return
       }
       
-      do {
-        view.showRoutePreview(coordinates: coordinates)
-        resolve(["success": true])
-      } catch {
-        reject("ERROR", "Failed to show route preview: \(error.localizedDescription)", error)
-      }
+      view.showRoutePreview(coordinates: coordinates)
+      resolve(["success": true])
     }
   }
   
   @objc
   func hideRoutePreview(_ viewRef: NSNumber, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    print("🔵 MapboxNavigationViewModule: hideRoutePreview called with viewRef: \(viewRef)")
+    
     DispatchQueue.main.async { [weak self] in
       guard let self = self else {
         reject("ERROR", "Module instance is nil", nil)
@@ -146,17 +166,15 @@ class MapboxNavigationViewModule: NSObject, RCTBridgeModule {
         return
       }
       
-      do {
-        view.hideRoutePreview()
-        resolve(["success": true])
-      } catch {
-        reject("ERROR", "Failed to hide route preview: \(error.localizedDescription)", error)
-      }
+      view.hideRoutePreview()
+      resolve(["success": true])
     }
   }
   
   @objc
   func setCameraZoom(_ viewRef: NSNumber, zoomLevel: NSNumber, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    print("🔵 MapboxNavigationViewModule: setCameraZoom called with viewRef: \(viewRef), zoom: \(zoomLevel)")
+    
     DispatchQueue.main.async { [weak self] in
       guard let self = self else {
         reject("ERROR", "Module instance is nil", nil)
@@ -168,17 +186,15 @@ class MapboxNavigationViewModule: NSObject, RCTBridgeModule {
         return
       }
       
-      do {
-        view.setCameraZoom(zoomLevel: zoomLevel.doubleValue)
-        resolve(["success": true])
-      } catch {
-        reject("ERROR", "Failed to set camera zoom: \(error.localizedDescription)", error)
-      }
+      view.setCameraZoom(zoomLevel: zoomLevel.doubleValue)
+      resolve(["success": true])
     }
   }
   
   @objc
   func getCameraZoom(_ viewRef: NSNumber, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    print("🔵 MapboxNavigationViewModule: getCameraZoom called with viewRef: \(viewRef)")
+    
     DispatchQueue.main.async { [weak self] in
       guard let self = self else {
         reject("ERROR", "Module instance is nil", nil)
@@ -190,17 +206,15 @@ class MapboxNavigationViewModule: NSObject, RCTBridgeModule {
         return
       }
       
-      do {
-        let zoomLevel = view.getCameraZoom()
-        resolve(["zoom": zoomLevel])
-      } catch {
-        reject("ERROR", "Failed to get camera zoom: \(error.localizedDescription)", error)
-      }
+      let zoomLevel = view.getCameraZoom()
+      resolve(["zoom": zoomLevel])
     }
   }
   
   @objc
   func setVisibleArea(_ viewRef: NSNumber, visibleArea: [String: Any], resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    print("🔵 MapboxNavigationViewModule: setVisibleArea called with viewRef: \(viewRef)")
+    
     DispatchQueue.main.async { [weak self] in
       guard let self = self else {
         reject("ERROR", "Module instance is nil", nil)
@@ -212,21 +226,21 @@ class MapboxNavigationViewModule: NSObject, RCTBridgeModule {
         return
       }
       
-      do {
-        view.setVisibleArea(visibleArea: visibleArea)
-        resolve(["success": true])
-      } catch {
-        reject("ERROR", "Failed to set visible area: \(error.localizedDescription)", error)
-      }
+      view.setVisibleArea(visibleArea: visibleArea)
+      resolve(["success": true])
     }
   }
   
   // Helper method to register navigation views
   func registerNavigationView(_ viewRef: Int, view: MapboxNavigationView) {
+    print("🔵 MapboxNavigationViewModule: Registering navigation view with ref: \(viewRef)")
     navigationViews[viewRef] = view
+    print("🔵 MapboxNavigationViewModule: Total registered views: \(navigationViews.count)")
   }
   
   func unregisterNavigationView(_ viewRef: Int) {
+    print("🔵 MapboxNavigationViewModule: Unregistering navigation view with ref: \(viewRef)")
     navigationViews.removeValue(forKey: viewRef)
+    print("🔵 MapboxNavigationViewModule: Total registered views: \(navigationViews.count)")
   }
 }
