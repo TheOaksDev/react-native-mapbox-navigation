@@ -20,28 +20,74 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Navigation
     
     // MARK: - React Native Properties
     @objc var origin: NSDictionary = [:] {
-        didSet { 
+        didSet {
             print("🔵 MapboxNavigationView: origin set to: \(origin)")
-            setNeedsLayout() 
+            setNeedsLayout()
         }
     }
 
     @objc var destination: NSDictionary = [:] {
-        didSet { 
+        didSet {
             print("🔵 MapboxNavigationView: destination set to: \(destination)")
-            setNeedsLayout() 
+            setNeedsLayout()
         }
     }
 
-    @objc var mapStyleURL: String = ""
-    @objc var viewStyles: NSDictionary = [:]
+    @objc var mapStyleURL: String = "" {
+        didSet {
+            print("🔵 MapboxNavigationView: mapStyleURL set to: \(mapStyleURL)")
+            setNeedsLayout()
+        }
+    }
+    
+    @objc var viewStyles: NSDictionary = [:] {
+        didSet {
+            print("🔵 MapboxNavigationView: viewStyles set to: \(viewStyles)")
+            setNeedsLayout()
+        }
+    }
 
-    @objc var isCarplayView: Bool = true
-    @objc var shouldSimulateRoute: Bool = false
-    @objc var showsEndOfRouteFeedback: Bool = false
+    @objc var isCarplayView: Bool = true {
+        didSet {
+            print("🔵 MapboxNavigationView: isCarplayView set to: \(isCarplayView)")
+            setNeedsLayout()
+        }
+    }
+    
+    @objc var shouldSimulateRoute: Bool = false {
+        didSet {
+            print("🔵 MapboxNavigationView: shouldSimulateRoute set to: \(shouldSimulateRoute)")
+            setNeedsLayout()
+        }
+    }
+    
+    @objc var showsEndOfRouteFeedback: Bool = false {
+        didSet {
+            print("🔵 MapboxNavigationView: showsEndOfRouteFeedback set to: \(showsEndOfRouteFeedback)")
+            setNeedsLayout()
+        }
+    }
 
-    @objc var hideReportFeedback: Bool = false
-    @objc var mute: Bool = false
+    @objc var hideReportFeedback: Bool = false {
+        didSet {
+            print("🔵 MapboxNavigationView: hideReportFeedback set to: \(hideReportFeedback)")
+            setNeedsLayout()
+        }
+    }
+    
+    @objc var isDarkMode: Bool = false {
+        didSet {
+            print("🔵 MapboxNavigationView: isDarkMode set to: \(isDarkMode)")
+            setNeedsLayout()
+        }
+    }
+    
+    @objc var mute: Bool = false {
+        didSet {
+            print("🔵 MapboxNavigationView: mute set to: \(mute)")
+            setNeedsLayout()
+        }
+    }
 
     @objc var onLocationChange: RCTDirectEventBlock?
     @objc var onRouteProgressChange: RCTDirectEventBlock?
@@ -330,27 +376,156 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Navigation
         }
 
         // Configure navigation view controller appearance
-        vc.showsReportFeedback = !hideReportFeedback
+        vc.showsReportFeedback = false // Hide the report feedback button
+        vc.showsContinuousAlternatives = false
         vc.showsEndOfRouteFeedback = showsEndOfRouteFeedback
-
-        if isCarplayView {
-            vc.floatingButtonsPosition = .topTrailing
-        }
         
         // Hide UI elements for CarPlay view
-        StatusView.appearance().isHidden = isCarplayView
-        TopBannerView.appearance().isHidden = isCarplayView
-        BottomBannerView.appearance().isHidden = isCarplayView
-        InstructionsBannerView.appearance().isHidden = isCarplayView
-        NextBannerView.appearance().isHidden = isCarplayView
-        StepInstructionsView.appearance().isHidden = isCarplayView
-        FloatingButton.appearance().isHidden = isCarplayView
+        // StatusView.appearance().isHidden = isCarplayView
+        // TopBannerView.appearance().isHidden = isCarplayView
+        // BottomBannerView.appearance().isHidden = isCarplayView
+        // InstructionsBannerView.appearance().isHidden = isCarplayView
+        // NextBannerView.appearance().isHidden = isCarplayView
+        // StepInstructionsView.appearance().isHidden = isCarplayView
+        // FloatingButton.appearance().isHidden = isCarplayView
         NavigationSettings.shared.voiceMuted = mute
 
         vc.delegate = self
         
         // Set up map view manager with navigation view controller
         mapViewManager.setNavigationViewController(vc)
+        
+        // Apply custom styling to native buttons if viewStyles are provided
+        applyNativeButtonStyles()
+        
+        // Add native Mapbox Navigation buttons to the floating buttons array
+        setupNativeFloatingButtons(for: vc)
+        
+        // Use native Mapbox Navigation buttons instead of custom ones
+        // The NavigationViewController already includes:
+        // - Route overview button (zoom out to full route)
+        // - Resume navigation button (zoom back to current location)
+        // - Volume control button (mute/unmute voice instructions)
+        // - Feedback button (hidden via showsReportFeedback = false)
+        
+        print("🔵 MapboxNavigationView: Using native Mapbox Navigation buttons")
+    }
+    
+    private func setupNativeFloatingButtons(for vc: NavigationViewController) {
+        print("🔵 MapboxNavigationView: Setting up floating buttons, isDarkMode: \(isDarkMode)")
+        
+        // Helper function to get the appropriate image based on dark mode
+        func getImage(for baseName: String) -> UIImage? {
+            let suffix = isDarkMode ? "light" : "dark"
+            let imageName = "\(baseName)_\(suffix)"
+            return UIImage(named: imageName)
+        }
+        
+        // Create native Mapbox Navigation buttons using the rounded class method
+        let routeOverviewButton = FloatingButton.rounded(
+            image: getImage(for: "map_route"),
+            size: FloatingButton.buttonSize,
+            type: .custom
+        )
+        
+        routeOverviewButton.addTarget(self, action: #selector(routeOverviewButtonTapped), for: .touchUpInside)
+        
+        let resumeButton = FloatingButton.rounded(
+            image: getImage(for: "center_location"),
+            size: FloatingButton.buttonSize,
+            type: .custom
+        )
+        
+        resumeButton.addTarget(self, action: #selector(resumeButtonTapped), for: .touchUpInside)
+        
+        let volumeButton = FloatingButton.rounded(
+            image: getImage(for: NavigationSettings.shared.voiceMuted ? "sound_off" : "sound_on"),
+            size: FloatingButton.buttonSize,
+            type: .custom
+        )
+        
+        volumeButton.addTarget(self, action: #selector(volumeButtonTapped), for: .touchUpInside)
+        
+        // Add buttons to the navigation view controller - unwrap the optional array
+        vc.floatingButtons = [routeOverviewButton, resumeButton, volumeButton]
+        vc.floatingButtonsPosition = .topTrailing
+
+        print("🔵 MapboxNavigationView: Added native floating buttons using rounded method with \(isDarkMode ? "dark" : "light") mode")
+    }
+    
+    @objc private func routeOverviewButtonTapped() {
+        print("🔵 MapboxNavigationView: Route overview button tapped")
+        mapViewManager.moveToOverview()
+    }
+    
+    @objc private func resumeButtonTapped() {
+        print("🔵 MapboxNavigationView: Resume button tapped")
+        mapViewManager.follow()
+    }
+    
+    @objc private func volumeButtonTapped() {
+        print("🔵 MapboxNavigationView: Volume button tapped")
+        let isMuted = NavigationSettings.shared.voiceMuted
+        NavigationSettings.shared.voiceMuted = !isMuted
+        
+        // Helper function to get the appropriate image based on dark mode
+        func getImage(for baseName: String) -> UIImage? {
+            let suffix = isDarkMode ? "dark" : "light"
+            let imageName = "\(baseName)_\(suffix)"
+            return UIImage(named: imageName)
+        }
+        
+        // Update button image using the rounded method - safely unwrap the optional array
+        if let floatingButtons = navViewController?.floatingButtons,
+           let volumeButton = floatingButtons.last as? FloatingButton { // Volume button is the last one
+            let newButton = FloatingButton.rounded(
+                image: getImage(for: !isMuted ? "sound_off" : "sound_on"),
+                selectedImage: getImage(for: !isMuted ? "sound_off" : "sound_on"),
+                size: FloatingButton.buttonSize,
+                type: .custom
+            )
+            
+            // Copy the target action
+            newButton.addTarget(self, action: #selector(volumeButtonTapped), for: .touchUpInside)
+            
+            // Create a new array with the updated button and assign it back
+            var updatedButtons = floatingButtons
+            if let index = updatedButtons.lastIndex(of: volumeButton) {
+                updatedButtons[index] = newButton
+                navViewController?.floatingButtons = updatedButtons
+            }
+        }
+    }
+    
+    private func applyNativeButtonStyles() {
+        // Apply custom styling to native Mapbox Navigation buttons
+        // This follows the pattern shown in the Mapbox documentation
+        
+        if let styles = viewStyles as? [String: Any],
+           let floatingButtons = styles["floatingButtons"] as? [String: Any] {
+            
+            // Apply tint color if specified
+            if let tintColorString = floatingButtons["tintColor"] as? String,
+               let tintColor = UIColor(hex: tintColorString) {
+                FloatingButton.appearance().tintColor = tintColor
+                print("🔵 MapboxNavigationView: Applied tint color to floating buttons: \(tintColorString)")
+            }
+            
+            // Apply background color if specified
+            if let backgroundColorString = floatingButtons["backgroundColor"] as? String,
+               let backgroundColor = UIColor(hex: backgroundColorString) {
+                FloatingButton.appearance().backgroundColor = backgroundColor
+                print("🔵 MapboxNavigationView: Applied background color to floating buttons: \(backgroundColorString)")
+            }
+            
+            // Apply border color if specified
+            if let borderColorString = floatingButtons["borderColor"] as? String,
+               let borderColor = UIColor(hex: borderColorString) {
+                FloatingButton.appearance().layer.borderColor = borderColor.cgColor
+                FloatingButton.appearance().layer.borderWidth = 1.0
+                print("🔵 MapboxNavigationView: Applied border color to floating buttons: \(borderColorString)")
+            }
+        }
     }
     
     private func embedViewController(_ vc: NavigationViewController, in parentVC: UIViewController) {
@@ -367,6 +542,8 @@ class MapboxNavigationView: UIView, NavigationViewControllerDelegate, Navigation
         print("🔵 MapboxNavigationView: applyStyles called")
         if let styles = viewStyles as? [String: Any] {
             styleManager.setStyles(styles)
+            // Also apply native button styles
+            applyNativeButtonStyles()
         }
     }
 
